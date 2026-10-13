@@ -1,0 +1,21 @@
+{
+  "vision": {
+    "total_images": 400,
+    "classes": [
+      "Normal",
+      "Pneumonia"
+    ],
+    "resolution": [
+      128,
+      128
+    ],
+    "channels": 1
+  },
+  "ecg": {
+    "train_normal_beats": 800,
+    "val_normal_beats": 200,
+    "test_total_beats": 200,
+    "test_anomaly_ratio": 0.5,
+    "signal_length": 256
+  }
+}

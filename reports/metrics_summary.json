@@ -1,0 +1,34 @@
+{
+  "chest_xray_vision": {
+    "model": "ResidualChestCNN + SpatialAttention + GradCAM",
+    "accuracy": 1.0,
+    "sensitivity": 1.0,
+    "specificity": 1.0,
+    "precision": 1.0,
+    "f1_score": 1.0,
+    "roc_auc": 1.0,
+    "pr_auc": 1.0,
+    "confusion_matrix": {
+      "tp": 30,
+      "fp": 0,
+      "tn": 30,
+      "fn": 0
+    }
+  },
+  "ecg_cardiac_anomaly": {
+    "model": "1D-ConvAutoencoder (Temporal Latent Bottleneck)",
+    "calibrated_threshold": 0.010369724966585636,
+    "accuracy": 0.87,
+    "arrhythmia_sensitivity": 0.75,
+    "sinus_specificity": 0.99,
+    "precision": 0.9868421052631579,
+    "f1_score": 0.8522727272727273,
+    "reconstruction_roc_auc": 0.9714,
+    "confusion_matrix": {
+      "tp": 75,
+      "fp": 1,
+      "tn": 99,
+      "fn": 25
+    }
+  }
+}

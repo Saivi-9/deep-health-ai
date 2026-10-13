@@ -1,0 +1,23 @@
+{
+  "task": "chest_xray_classification",
+  "num_classes": 2,
+  "class_names": ["Normal", "Pathology_Pneumonia"],
+  "image_size": [128, 128],
+  "in_channels": 1,
+  "batch_size": 32,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "num_epochs": 15,
+  "patience": 5,
+  "seed": 42,
+  "data_split": {
+    "train_ratio": 0.70,
+    "val_ratio": 0.15,
+    "test_ratio": 0.15
+  },
+  "augmentation": {
+    "random_horizontal_flip": true,
+    "random_rotation_degrees": 10,
+    "color_jitter": 0.1
+  }
+}
