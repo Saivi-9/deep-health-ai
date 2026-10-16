@@ -184,7 +184,18 @@ Output:
 ============================== 9 passed in 4.60s ==============================
 ```
 
-### 3. Run the End-to-End Multi-Modal Pipeline
+### 3. Launch Interactive Clinical Web Application
+Launch the multi-page clinical diagnostic web interface powered by Streamlit:
+```bash
+streamlit run app.py
+```
+**Features in the Web App:**
+- 🫁 **Thoracic Radiograph Diagnostic Assistant:** Upload chest X-rays or choose from preset cases, run predictions with real-time **Grad-CAM attention heatmaps**, and calculate **epistemic uncertainty (Monte Carlo Dropout)** with clinical referral flags.
+- 💓 **ECG Arrhythmia Anomaly Detector:** Screen 1D Lead-II waveforms, visualize **latent manifold reconstructions**, and inspect **squared-error residuals**.
+- 📊 **Model Cards & Benchmark Visualizer:** View published architectures and live ROC, PR, and confusion matrix validation figures.
+- 📄 **Patient Report Generator:** Compile multi-modal findings into an official consultation report downloadable as `.html`.
+
+### 4. Run the End-to-End Multi-Modal Pipeline
 Executes synthetic dataset creation, trains both models, evaluates on isolated test sets, and outputs all figures:
 ```bash
 python demo.py
