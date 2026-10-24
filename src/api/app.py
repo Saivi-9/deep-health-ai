@@ -259,3 +259,11 @@ def screen_ecg_signal(payload: ECGScreenRequest):
         telemetry=ECGTelemetry(**telemetry_data),
         timestamp=datetime.now(timezone.utc).isoformat()
     )
+
+
+# Mount Production React PACS Frontend if built
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
+if os.path.exists(frontend_dist):
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+
