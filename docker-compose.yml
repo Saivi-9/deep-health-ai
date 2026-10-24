@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Service 1: Interactive Clinical PACS Workstation
+  web-workstation:
+    build: .
+    container_name: deep-health-web
+    command: ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./saved_models:/app/saved_models:ro
+      - ./reports:/app/reports
+    restart: unless-stopped
+    environment:
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Service 2: High-Performance Clinical REST API
+  api-service:
+    build: .
+    container_name: deep-health-api
+    command: ["python", "api_server.py", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./saved_models:/app/saved_models:ro
+      - ./reports:/app/reports
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
