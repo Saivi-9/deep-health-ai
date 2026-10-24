@@ -3,14 +3,21 @@
 [![Python](https://img.shields.io/badge/Python-3.14%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.14-EE4C2C.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-9%2F9%20Passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-24%2F24%20Passing-brightgreen.svg)]()
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](https://fastapi.tiangolo.com)
+[![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED.svg)](https://www.docker.com)
 [![Model](https://img.shields.io/badge/Architecture-ResNet%20%2B%20GradCAM%20%7C%201D--Autoencoder-purple.svg)]()
+[![Model Card](https://img.shields.io/badge/Docs-Model%20Card-blue.svg)](docs/MODEL_CARD.md)
+[![Clinical Validation](https://img.shields.io/badge/Docs-Clinical%20Validation-green.svg)](docs/CLINICAL_VALIDATION.md)
 
 **Deep Health AI** is a dual-domain clinical deep learning repository implementing medical image classification with gradient-weighted explainability alongside unsupervised temporal bio-signal anomaly detection. 
 
 Built in native **PyTorch**, this project demonstrates modern deep learning engineering for healthcare diagnostics:
 1. **2D Medical Computer Vision**: A Deep Residual Convolutional Neural Network with **Spatial Attention** and **Grad-CAM** (Gradient-Weighted Class Activation Mapping) for explainable detection of alveolar consolidation and pneumonia in chest radiographs.
 2. **1D Temporal Bio-Signals**: An unsupervised **1D Convolutional Autoencoder** that learns latent representations of Normal Sinus Rhythm (NSR) to detect cardiac arrhythmias, premature ventricular contractions (PVC), and ischemic ST changes via reconstruction error thresholding.
+3. **Production FastAPI Microservice**: High-throughput REST API with Pydantic v2 schemas, automated input preprocessing, and DICOM-grade error handling.
+4. **Cohort Batch Processor**: Multi-sample parallelized diagnostic batch processing with summary statistics.
+5. **Clinical Governance**: Rigorous model card ([`docs/MODEL_CARD.md`](docs/MODEL_CARD.md)) and clinical validation framework ([`docs/CLINICAL_VALIDATION.md`](docs/CLINICAL_VALIDATION.md)).
 
 ---
 
@@ -176,16 +183,101 @@ pip install -r requirements.txt
 ```
 
 ### 2. Run Test Suite
+Execute the full unit test suite (24 passing unit and integration tests covering vision, ECG, clinical metrics, FastAPI endpoints, and batch processing):
 ```bash
-pytest tests/
+pytest tests/ -v
 ```
 Output:
 ```
-============================== 9 passed in 4.60s ==============================
+============================== 24 passed in 9.54s ==============================
 ```
 
-### 3. Launch Interactive Clinical Web Application
-Launch the multi-page clinical diagnostic web interface powered by Streamlit:
+### 3. Production FastAPI REST Microservice
+Deploy the high-throughput clinical inference server powered by FastAPI and Uvicorn:
+```bash
+python api_server.py --port 8000
+```
+Interactive OpenAPI / Swagger UI documentation is available at `http://localhost:8000/docs`.
+
+#### A. Vision Diagnosis API Endpoint (`/api/v1/diagnose/vision`):
+```bash
+curl -X POST "http://localhost:8000/api/v1/diagnose/vision?include_mc_dropout=true" \
+     -H "accept: application/json" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@data/vision/pneumonia/pneumonia_0005.png"
+```
+**JSON Response:**
+```json
+{
+  "modality": "chest_xray",
+  "predicted_class": "Pathology_Pneumonia",
+  "confidence": 0.9997,
+  "class_probabilities": {
+    "Normal": 0.0003,
+    "Pathology_Pneumonia": 0.9997
+  },
+  "triage_urgency": "HIGH",
+  "uncertainty": {
+    "mean_probability": 0.9985,
+    "variance": 0.0012,
+    "entropy": 0.0154,
+    "confidence_interval_95": [0.9912, 1.0000],
+    "requires_clinical_review": false
+  },
+  "inference_latency_ms": 24.5
+}
+```
+
+#### B. ECG Cardiac Screening API Endpoint (`/api/v1/screen/ecg`):
+```bash
+curl -X POST "http://localhost:8000/api/v1/screen/ecg" \
+     -H "Content-Type: application/json" \
+     -d '{"signal": [0.0, 0.05, 0.12, 0.35, 1.2, -0.4, 0.08]}'
+```
+**JSON Response:**
+```json
+{
+  "modality": "lead_ii_ecg",
+  "diagnosis": "Cardiac Arrhythmia / Ventricular Ectopy",
+  "anomaly_detected": true,
+  "reconstruction_mse": 0.04821,
+  "threshold": 0.01037,
+  "confidence_score": 0.963,
+  "triage_urgency": "CRITICAL"
+}
+```
+
+### 4. High-Throughput Cohort Batch Processing CLI
+Process entire patient cohorts, departmental directories, or multi-waveform arrays with automated CSV summary reporting:
+
+```bash
+# Batch process chest radiograph directory
+python batch_processor.py --modality vision --input data/vision/pneumonia --output reports/cohort_vision_summary.csv
+
+# Batch process multi-signal ECG array
+python batch_processor.py --modality ecg --input data/ecg/ecg_test.npy --output reports/cohort_ecg_summary.csv
+```
+
+### 5. Multi-Container Orchestration with Docker & Docker Compose
+Deploy both the FastAPI microservice and Streamlit frontend in isolated, multi-stage production containers:
+```bash
+# Build and launch both services
+docker compose up --build -d
+
+# Check service health
+docker compose ps
+```
+- **Clinical Web UI:** `http://localhost:8501`
+- **FastAPI REST Service:** `http://localhost:8000`
+- **Interactive Swagger Docs:** `http://localhost:8000/docs`
+
+To stop the services:
+```bash
+docker compose down
+```
+
+### 6. Launch Interactive Clinical Web Application (Local)
+Launch the multi-page clinical diagnostic web interface locally:
 ```bash
 streamlit run app.py
 ```
@@ -195,13 +287,13 @@ streamlit run app.py
 - 📊 **Model Cards & Benchmark Visualizer:** View published architectures and live ROC, PR, and confusion matrix validation figures.
 - 📄 **Patient Report Generator:** Compile multi-modal findings into an official consultation report downloadable as `.html`.
 
-### 4. Run the End-to-End Multi-Modal Pipeline
+### 7. Run the End-to-End Multi-Modal Pipeline
 Executes synthetic dataset creation, trains both models, evaluates on isolated test sets, and outputs all figures:
 ```bash
 python demo.py
 ```
 
-### 4. Interactive CLI Clinical Inference
+### 8. Interactive CLI Clinical Inference
 
 #### A. Diagnose a Chest Radiograph (with Grad-CAM Explainability):
 ```bash
