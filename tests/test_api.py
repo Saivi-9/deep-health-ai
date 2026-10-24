@@ -8,7 +8,7 @@ from io import BytesIO
 import pytest
 import numpy as np
 from PIL import Image
-from starlette.testclient import TestClient
+from fastapi.testclient import TestClient
 
 from src.api.app import app
 

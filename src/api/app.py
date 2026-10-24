@@ -71,7 +71,7 @@ def get_vision_model() -> ResidualChestCNN:
         model = ResidualChestCNN(in_channels=1, num_classes=2)
         weights_path = "saved_models/best_chest_cnn.pt"
         if os.path.exists(weights_path):
-            model.load_state_dict(torch.load(weights_path, map_location=torch.device(DEVICE)))
+            model.load_state_dict(torch.load(weights_path, map_location=torch.device(DEVICE), weights_only=True))
         model.to(DEVICE)
         model.eval()
         _vision_model = model
@@ -84,7 +84,7 @@ def get_ecg_detector() -> ECGAnomalyDetector:
         model = Conv1dAutoencoder(in_channels=1)
         weights_path = "saved_models/best_ecg_autoencoder.pt"
         if os.path.exists(weights_path):
-            model.load_state_dict(torch.load(weights_path, map_location=torch.device(DEVICE)))
+            model.load_state_dict(torch.load(weights_path, map_location=torch.device(DEVICE), weights_only=True))
         model.to(DEVICE)
         model.eval()
 

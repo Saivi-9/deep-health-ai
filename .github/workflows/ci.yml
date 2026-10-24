@@ -20,12 +20,17 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install PyTorch CPU
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install torch torchvision numpy matplotlib scikit-learn pillow pytest
+        pip install -r requirements.txt
 
     - name: Run Pytest test suite
       run: |
-        pytest tests/
+        pytest tests/ -v
