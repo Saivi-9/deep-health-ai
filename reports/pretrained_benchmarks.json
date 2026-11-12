@@ -1,0 +1,82 @@
+{
+  "vision": {
+    "Purino/mobilenetv2-chest-xray-pneumonia-256-fullframe-gray": {
+      "cohort": "Real PneumoniaMNIST Test Split (n=624)",
+      "accuracy": 0.9615384615384616,
+      "precision": 0.9945945945945946,
+      "sensitivity_recall": 0.9435897435897436,
+      "specificity": 0.9914529914529915,
+      "f1_score": 0.968421052631579,
+      "false_alarm_rate": 0.008547008547008548,
+      "confusion_matrix": {
+        "tp": 368,
+        "fp": 2,
+        "tn": 232,
+        "fn": 22
+      },
+      "roc_auc": 0.9975126013587552,
+      "pr_auc": 0.9984906007431098
+    },
+    "sdoerrich97/colorist_densenet121_pneumoniamnist_s71397589": {
+      "cohort": "Real PneumoniaMNIST Test Split (n=624)",
+      "accuracy": 0.8878205128205128,
+      "precision": 0.8493449781659389,
+      "sensitivity_recall": 0.9974358974358974,
+      "specificity": 0.7051282051282052,
+      "f1_score": 0.9174528301886793,
+      "false_alarm_rate": 0.2948717948717949,
+      "confusion_matrix": {
+        "tp": 389,
+        "fp": 69,
+        "tn": 165,
+        "fn": 1
+      },
+      "roc_auc": 0.978298268682884,
+      "pr_auc": 0.9797322503442254
+    },
+    "Purino/mobilenetv2-chest-xray-pneumonia": {
+      "cohort": "Real PneumoniaMNIST Test Split (n=624)",
+      "accuracy": 0.9583333333333334,
+      "precision": 0.9814814814814815,
+      "sensitivity_recall": 0.9512820512820512,
+      "specificity": 0.9700854700854701,
+      "f1_score": 0.9661458333333334,
+      "false_alarm_rate": 0.029914529914529916,
+      "confusion_matrix": {
+        "tp": 371,
+        "fp": 7,
+        "tn": 227,
+        "fn": 19
+      },
+      "roc_auc": 0.9949813719044489,
+      "pr_auc": 0.9968735321641167
+    }
+  },
+  "ecg": {
+    "dheerajthuvara/ecg-arrhythmia-detection": {
+      "cohort": "PhysioNet MIT-BIH Stratified Holdout (n=1500)",
+      "multiclass_accuracy": 0.976,
+      "macro_f1": 0.9762,
+      "multiclass_roc_auc": 0.9994
+    }
+  },
+  "clinical": {
+    "nexusbert/heart-disease-random-forest": {
+      "cohort": "Real Deduplicated Cardiology Test Split (n=261)",
+      "accuracy": 0.7279693486590039,
+      "precision": 0.7375886524822695,
+      "sensitivity_recall": 0.7536231884057971,
+      "specificity": 0.6991869918699187,
+      "f1_score": 0.7455197132616488,
+      "false_alarm_rate": 0.3008130081300813,
+      "confusion_matrix": {
+        "tp": 104,
+        "fp": 37,
+        "tn": 86,
+        "fn": 34
+      },
+      "roc_auc": 0.8370743490043595,
+      "pr_auc": 0.8696001982375579
+    }
+  }
+}

@@ -1,34 +1,602 @@
 {
+  "version": "2.0.0",
   "chest_xray_vision": {
-    "model": "ResidualChestCNN + SpatialAttention + GradCAM",
-    "accuracy": 1.0,
-    "sensitivity": 1.0,
-    "specificity": 1.0,
-    "precision": 1.0,
-    "f1_score": 1.0,
-    "roc_auc": 1.0,
-    "pr_auc": 1.0,
+    "model": "ResidualChestCNN + SpatialAttention + GradCAM (plus ResNet18, MobileNetV2, Radiomic-LGBM)",
+    "accuracy": 0.8731501057082452,
+    "sensitivity": 0.8352059925093633,
+    "specificity": 0.9223300970873787,
+    "precision": 0.9330543933054394,
+    "f1_score": 0.8814229249011858,
+    "roc_auc": 0.923057343369332,
+    "pr_auc": 0.9513075962849389,
     "confusion_matrix": {
-      "tp": 30,
-      "fp": 0,
-      "tn": 30,
-      "fn": 0
+      "tp": 223,
+      "fp": 16,
+      "tn": 190,
+      "fn": 44
+    },
+    "dataset_summary": {
+      "train_samples": 2203,
+      "val_samples": 472,
+      "test_samples": 473,
+      "total_samples": 3148,
+      "real_pneumoniamnist_test_samples": 624
+    },
+    "models_comparison": {
+      "ResidualChestCNN": {
+        "architecture": "4-Stage Residual CNN + SpatialAttention + MC Dropout",
+        "trainable_parameters": 1242500,
+        "checkpoint": "saved_models/best_chest_cnn.pt",
+        "unified_test_metrics": {
+          "accuracy": 0.8731501057082452,
+          "precision": 0.9330543933054394,
+          "sensitivity_recall": 0.8352059925093633,
+          "specificity": 0.9223300970873787,
+          "f1_score": 0.8814229249011858,
+          "false_alarm_rate": 0.07766990291262135,
+          "confusion_matrix": {
+            "tp": 223,
+            "fp": 16,
+            "tn": 190,
+            "fn": 44
+          },
+          "roc_auc": 0.923057343369332,
+          "pr_auc": 0.9513075962849389
+        },
+        "real_pneumoniamnist_metrics": {
+          "accuracy": 0.8685897435897436,
+          "precision": 0.8532110091743119,
+          "sensitivity_recall": 0.9538461538461539,
+          "specificity": 0.7264957264957265,
+          "f1_score": 0.9007263922518159,
+          "false_alarm_rate": 0.27350427350427353,
+          "confusion_matrix": {
+            "tp": 372,
+            "fp": 64,
+            "tn": 170,
+            "fn": 18
+          },
+          "roc_auc": 0.9366863905325444,
+          "pr_auc": 0.9607539537981348
+        }
+      },
+      "TransferResNet18": {
+        "architecture": "ImageNet-Pretrained ResNet18 Backbone + MC-Dropout Head",
+        "trainable_parameters": 8459650,
+        "checkpoint": "saved_models/vision_resnet18.pt",
+        "unified_test_metrics": {
+          "accuracy": 0.9133192389006343,
+          "precision": 0.959349593495935,
+          "sensitivity_recall": 0.8838951310861424,
+          "specificity": 0.9514563106796117,
+          "f1_score": 0.9200779727095516,
+          "false_alarm_rate": 0.04854368932038835,
+          "confusion_matrix": {
+            "tp": 236,
+            "fp": 10,
+            "tn": 196,
+            "fn": 31
+          },
+          "roc_auc": 0.9825642703901676,
+          "pr_auc": 0.9873530498356476
+        },
+        "real_pneumoniamnist_metrics": {
+          "accuracy": 0.9567307692307693,
+          "precision": 0.978891820580475,
+          "sensitivity_recall": 0.9512820512820512,
+          "specificity": 0.9658119658119658,
+          "f1_score": 0.9648894668400521,
+          "false_alarm_rate": 0.03418803418803419,
+          "confusion_matrix": {
+            "tp": 371,
+            "fp": 8,
+            "tn": 226,
+            "fn": 19
+          },
+          "roc_auc": 0.9926473811089196,
+          "pr_auc": 0.9955053032073096
+        }
+      },
+      "TransferMobileNetV2": {
+        "architecture": "ImageNet-Pretrained MobileNetV2 Backbone + MC-Dropout Head",
+        "trainable_parameters": 1683906,
+        "checkpoint": "saved_models/vision_mobilenetv2.pt",
+        "unified_test_metrics": {
+          "accuracy": 0.9069767441860465,
+          "precision": 0.9704641350210971,
+          "sensitivity_recall": 0.8614232209737828,
+          "specificity": 0.9660194174757282,
+          "f1_score": 0.9126984126984127,
+          "false_alarm_rate": 0.03398058252427184,
+          "confusion_matrix": {
+            "tp": 230,
+            "fp": 7,
+            "tn": 199,
+            "fn": 37
+          },
+          "roc_auc": 0.9611105050725428,
+          "pr_auc": 0.9759937610558178
+        },
+        "real_pneumoniamnist_metrics": {
+          "accuracy": 0.9631410256410257,
+          "precision": 0.9669211195928753,
+          "sensitivity_recall": 0.9743589743589743,
+          "specificity": 0.9444444444444444,
+          "f1_score": 0.9706257982120051,
+          "false_alarm_rate": 0.05555555555555555,
+          "confusion_matrix": {
+            "tp": 380,
+            "fp": 13,
+            "tn": 221,
+            "fn": 10
+          },
+          "roc_auc": 0.9910585141354371,
+          "pr_auc": 0.9942752739100994
+        }
+      },
+      "RadiomicLightGBM": {
+        "architecture": "14 First-Order/Texture/Spatial Radiomic Features + LightGBM",
+        "trainable_parameters": 14,
+        "checkpoint": "saved_models/vision_radiomic_lgbm.joblib",
+        "unified_test_metrics": {
+          "accuracy": 0.8350951374207188,
+          "precision": 0.8795180722891566,
+          "sensitivity_recall": 0.8202247191011236,
+          "specificity": 0.8543689320388349,
+          "f1_score": 0.8488372093023255,
+          "false_alarm_rate": 0.14563106796116504,
+          "confusion_matrix": {
+            "tp": 219,
+            "fp": 30,
+            "tn": 176,
+            "fn": 48
+          },
+          "roc_auc": 0.9017490273080977,
+          "pr_auc": 0.9270012407803249
+        },
+        "real_pneumoniamnist_metrics": {
+          "accuracy": 0.9599358974358975,
+          "precision": 0.9596977329974811,
+          "sensitivity_recall": 0.9769230769230769,
+          "specificity": 0.9316239316239316,
+          "f1_score": 0.9682337992376112,
+          "false_alarm_rate": 0.06837606837606838,
+          "confusion_matrix": {
+            "tp": 381,
+            "fp": 16,
+            "tn": 218,
+            "fn": 9
+          },
+          "roc_auc": 0.9859631821170283,
+          "pr_auc": 0.9912648675705853
+        }
+      }
     }
   },
   "ecg_cardiac_anomaly": {
-    "model": "1D-ConvAutoencoder (Temporal Latent Bottleneck)",
-    "calibrated_threshold": 0.010369724966585636,
-    "accuracy": 0.87,
-    "arrhythmia_sensitivity": 0.75,
-    "sinus_specificity": 0.99,
-    "precision": 0.9868421052631579,
-    "f1_score": 0.8522727272727273,
-    "reconstruction_roc_auc": 0.9714,
+    "model": "1D-ConvAutoencoder + Supervised 5-Class ECGResNet1D + ECG-LGBM + MIT-BIH ResNet1D",
+    "calibrated_threshold": 0.04516075337305663,
+    "accuracy": 0.99375,
+    "arrhythmia_sensitivity": 1.0,
+    "sinus_specificity": 0.96875,
+    "precision": 0.9922480620155039,
+    "f1_score": 0.9961089494163424,
+    "reconstruction_roc_auc": 1.0,
     "confusion_matrix": {
-      "tp": 75,
-      "fp": 1,
-      "tn": 99,
-      "fn": 25
+      "tp": 1920,
+      "fp": 15,
+      "tn": 465,
+      "fn": 0
+    },
+    "models_comparison": {
+      "Conv1dAutoencoder": {
+        "architecture": "Unsupervised 1D CNN Autoencoder (NSR Reconstruction)",
+        "trainable_parameters": 23405,
+        "checkpoint": "saved_models/best_ecg_autoencoder.pt",
+        "binary_anomaly_metrics": {
+          "accuracy": 0.99375,
+          "precision": 0.9922480620155039,
+          "sensitivity_recall": 1.0,
+          "specificity": 0.96875,
+          "f1_score": 0.9961089494163424,
+          "false_alarm_rate": 0.03125,
+          "confusion_matrix": {
+            "tp": 1920,
+            "fp": 15,
+            "tn": 465,
+            "fn": 0
+          },
+          "roc_auc": 1.0,
+          "pr_auc": 1.0
+        }
+      },
+      "ECGResNet1D": {
+        "architecture": "Supervised 4-Stage 1D Residual CNN (5-Class Differential)",
+        "trainable_parameters": 250533,
+        "checkpoint": "saved_models/ecg_resnet1d.pt",
+        "binary_anomaly_metrics": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "sensitivity_recall": 1.0,
+          "specificity": 1.0,
+          "f1_score": 1.0,
+          "false_alarm_rate": 0.0,
+          "confusion_matrix": {
+            "tp": 1920,
+            "fp": 0,
+            "tn": 480,
+            "fn": 0
+          },
+          "roc_auc": 1.0,
+          "pr_auc": 1.0
+        },
+        "multiclass_metrics": {
+          "multiclass_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "multiclass_roc_auc": 1.0
+        }
+      },
+      "ECGMorphologyLightGBM": {
+        "architecture": "18-Feature Electrophysiology + FFT LightGBM Classifier",
+        "trainable_parameters": 18,
+        "checkpoint": "saved_models/ecg_lgbm.joblib",
+        "binary_anomaly_metrics": {
+          "accuracy": 0.99125,
+          "precision": 0.995822454308094,
+          "sensitivity_recall": 0.9932291666666667,
+          "specificity": 0.9833333333333333,
+          "f1_score": 0.9945241199478487,
+          "false_alarm_rate": 0.016666666666666666,
+          "confusion_matrix": {
+            "tp": 1907,
+            "fp": 8,
+            "tn": 472,
+            "fn": 13
+          },
+          "roc_auc": 0.9994563802083333,
+          "pr_auc": 0.9998651416293125
+        },
+        "multiclass_metrics": {
+          "multiclass_accuracy": 0.9904,
+          "macro_f1": 0.9904,
+          "multiclass_roc_auc": 0.9998
+        }
+      },
+      "ECGMorphologyHistGB": {
+        "architecture": "18-Feature Electrophysiology + FFT HistGradientBoosting",
+        "trainable_parameters": 18,
+        "checkpoint": "saved_models/ecg_lgbm.joblib",
+        "binary_anomaly_metrics": {
+          "accuracy": 0.9925,
+          "precision": 0.9958289885297185,
+          "sensitivity_recall": 0.9947916666666666,
+          "specificity": 0.9833333333333333,
+          "f1_score": 0.9953100573215217,
+          "false_alarm_rate": 0.016666666666666666,
+          "confusion_matrix": {
+            "tp": 1910,
+            "fp": 8,
+            "tn": 472,
+            "fn": 10
+          },
+          "roc_auc": 0.9995203993055555,
+          "pr_auc": 0.9998810800288094
+        },
+        "multiclass_metrics": {
+          "multiclass_accuracy": 0.9921,
+          "macro_f1": 0.9921,
+          "multiclass_roc_auc": 0.9998
+        }
+      }
+    },
+    "mitbih_benchmark": {
+      "dataset": "dheerajthuvara/ecg-arrhythmia-data (10k real stratified beats)",
+      "classes": [
+        "A",
+        "L",
+        "N",
+        "R",
+        "V"
+      ],
+      "checkpoint": "saved_models/ecg_mitbih_resnet1d.pt",
+      "multiclass_accuracy": 0.954,
+      "macro_f1": 0.9541,
+      "multiclass_roc_auc": 0.9965
+    }
+  },
+  "clinical_cardiology_ehr": {
+    "dataset": "BenchmarkDatasets/Heart-Disease-Dataset-_Comprehensive + TabBioMed/HeartDisease_UCI",
+    "total_patients": 1305,
+    "train_patients": 1044,
+    "test_patients": 261,
+    "positive_rate": 0.5303,
+    "best_model": "HistGradientBoosting",
+    "best_test_metrics": {
+      "accuracy": 0.8888888888888888,
+      "precision": 0.9224806201550387,
+      "sensitivity_recall": 0.8623188405797102,
+      "specificity": 0.9186991869918699,
+      "f1_score": 0.8913857677902621,
+      "false_alarm_rate": 0.08130081300813008,
+      "confusion_matrix": {
+        "tp": 119,
+        "fp": 10,
+        "tn": 113,
+        "fn": 19
+      },
+      "roc_auc": 0.9565806527630494,
+      "pr_auc": 0.963045740566574
+    },
+    "models_comparison": {
+      "LightGBM": {
+        "cv_accuracy_mean": 0.8602,
+        "cv_roc_auc_mean": 0.9208,
+        "cv_f1_mean": 0.8706,
+        "test_metrics": {
+          "accuracy": 0.8850574712643678,
+          "precision": 0.921875,
+          "sensitivity_recall": 0.855072463768116,
+          "specificity": 0.9186991869918699,
+          "f1_score": 0.8872180451127819,
+          "false_alarm_rate": 0.08130081300813008,
+          "confusion_matrix": {
+            "tp": 118,
+            "fp": 10,
+            "tn": 113,
+            "fn": 20
+          },
+          "roc_auc": 0.9482149169317782,
+          "pr_auc": 0.9550662823131565
+        }
+      },
+      "HistGradientBoosting": {
+        "cv_accuracy_mean": 0.865,
+        "cv_roc_auc_mean": 0.924,
+        "cv_f1_mean": 0.8754,
+        "test_metrics": {
+          "accuracy": 0.8888888888888888,
+          "precision": 0.9224806201550387,
+          "sensitivity_recall": 0.8623188405797102,
+          "specificity": 0.9186991869918699,
+          "f1_score": 0.8913857677902621,
+          "false_alarm_rate": 0.08130081300813008,
+          "confusion_matrix": {
+            "tp": 119,
+            "fp": 10,
+            "tn": 113,
+            "fn": 19
+          },
+          "roc_auc": 0.9565806527630494,
+          "pr_auc": 0.963045740566574
+        }
+      },
+      "RandomForest": {
+        "cv_accuracy_mean": 0.8381,
+        "cv_roc_auc_mean": 0.9152,
+        "cv_f1_mean": 0.8519,
+        "test_metrics": {
+          "accuracy": 0.9042145593869731,
+          "precision": 0.9312977099236641,
+          "sensitivity_recall": 0.8840579710144928,
+          "specificity": 0.926829268292683,
+          "f1_score": 0.9070631970260223,
+          "false_alarm_rate": 0.07317073170731707,
+          "confusion_matrix": {
+            "tp": 122,
+            "fp": 9,
+            "tn": 114,
+            "fn": 16
+          },
+          "roc_auc": 0.9513373394603512,
+          "pr_auc": 0.9575592628217103
+        }
+      },
+      "ExtraTrees": {
+        "cv_accuracy_mean": 0.8391,
+        "cv_roc_auc_mean": 0.9114,
+        "cv_f1_mean": 0.8538,
+        "test_metrics": {
+          "accuracy": 0.8735632183908046,
+          "precision": 0.9007633587786259,
+          "sensitivity_recall": 0.855072463768116,
+          "specificity": 0.8943089430894309,
+          "f1_score": 0.8773234200743495,
+          "false_alarm_rate": 0.10569105691056911,
+          "confusion_matrix": {
+            "tp": 118,
+            "fp": 13,
+            "tn": 110,
+            "fn": 20
+          },
+          "roc_auc": 0.9472722988099447,
+          "pr_auc": 0.9481706348068084
+        }
+      },
+      "StackingEnsemble": {
+        "cv_accuracy_mean": 0.8525,
+        "cv_roc_auc_mean": 0.9269,
+        "cv_f1_mean": 0.8641,
+        "test_metrics": {
+          "accuracy": 0.8888888888888888,
+          "precision": 0.9291338582677166,
+          "sensitivity_recall": 0.855072463768116,
+          "specificity": 0.926829268292683,
+          "f1_score": 0.8905660377358491,
+          "false_alarm_rate": 0.07317073170731707,
+          "confusion_matrix": {
+            "tp": 118,
+            "fp": 9,
+            "tn": 114,
+            "fn": 20
+          },
+          "roc_auc": 0.9553434664781432,
+          "pr_auc": 0.9574598546444766
+        }
+      }
+    },
+    "feature_importance": [
+      {
+        "feature": "cardiac_ischemia_burden",
+        "importance": 0.1412
+      },
+      {
+        "feature": "chest_pain_type",
+        "importance": 0.0982
+      },
+      {
+        "feature": "st_severity_index",
+        "importance": 0.0793
+      },
+      {
+        "feature": "age",
+        "importance": 0.0609
+      },
+      {
+        "feature": "estimated_max_hr_pct",
+        "importance": 0.0597
+      },
+      {
+        "feature": "max_hr",
+        "importance": 0.0581
+      },
+      {
+        "feature": "angina_pain_interaction",
+        "importance": 0.0562
+      },
+      {
+        "feature": "cholesterol_to_age",
+        "importance": 0.0561
+      },
+      {
+        "feature": "rate_pressure_product",
+        "importance": 0.0555
+      },
+      {
+        "feature": "cholesterol",
+        "importance": 0.0554
+      },
+      {
+        "feature": "age_x_oldpeak",
+        "importance": 0.0473
+      },
+      {
+        "feature": "exercise_angina",
+        "importance": 0.042
+      }
+    ],
+    "hf_raw_stats": {
+      "age": {
+        "mean": 53.167624521072796,
+        "std": 9.545096919361885,
+        "median": 54.0
+      },
+      "resting_bp": {
+        "mean": 132.22883064516128,
+        "std": 18.657650409253023,
+        "median": 130.0
+      },
+      "cholesterol": {
+        "mean": 245.70646766169153,
+        "std": 60.3237196482379,
+        "median": 237.5
+      },
+      "fasting_bs": {
+        "mean": 0.22164948453608246,
+        "std": 0.41535646201903664,
+        "median": 0.0
+      },
+      "oldpeak": {
+        "mean": 0.7335020242914979,
+        "std": 1.0267973690268382,
+        "median": 0.0
+      },
+      "exercise_angina": {
+        "mean": 0.3527638190954774,
+        "std": 0.4778299980460109,
+        "median": 0.0
+      }
+    }
+  },
+  "pretrained_huggingface_hub": {
+    "vision": {
+      "Purino/mobilenetv2-chest-xray-pneumonia-256-fullframe-gray": {
+        "cohort": "Real PneumoniaMNIST Test Split (n=624)",
+        "accuracy": 0.9615384615384616,
+        "precision": 0.9945945945945946,
+        "sensitivity_recall": 0.9435897435897436,
+        "specificity": 0.9914529914529915,
+        "f1_score": 0.968421052631579,
+        "false_alarm_rate": 0.008547008547008548,
+        "confusion_matrix": {
+          "tp": 368,
+          "fp": 2,
+          "tn": 232,
+          "fn": 22
+        },
+        "roc_auc": 0.9975126013587552,
+        "pr_auc": 0.9984906007431098
+      },
+      "sdoerrich97/colorist_densenet121_pneumoniamnist_s71397589": {
+        "cohort": "Real PneumoniaMNIST Test Split (n=624)",
+        "accuracy": 0.8878205128205128,
+        "precision": 0.8493449781659389,
+        "sensitivity_recall": 0.9974358974358974,
+        "specificity": 0.7051282051282052,
+        "f1_score": 0.9174528301886793,
+        "false_alarm_rate": 0.2948717948717949,
+        "confusion_matrix": {
+          "tp": 389,
+          "fp": 69,
+          "tn": 165,
+          "fn": 1
+        },
+        "roc_auc": 0.978298268682884,
+        "pr_auc": 0.9797322503442254
+      },
+      "Purino/mobilenetv2-chest-xray-pneumonia": {
+        "cohort": "Real PneumoniaMNIST Test Split (n=624)",
+        "accuracy": 0.9583333333333334,
+        "precision": 0.9814814814814815,
+        "sensitivity_recall": 0.9512820512820512,
+        "specificity": 0.9700854700854701,
+        "f1_score": 0.9661458333333334,
+        "false_alarm_rate": 0.029914529914529916,
+        "confusion_matrix": {
+          "tp": 371,
+          "fp": 7,
+          "tn": 227,
+          "fn": 19
+        },
+        "roc_auc": 0.9949813719044489,
+        "pr_auc": 0.9968735321641167
+      }
+    },
+    "ecg": {
+      "dheerajthuvara/ecg-arrhythmia-detection": {
+        "cohort": "PhysioNet MIT-BIH Stratified Holdout (n=1500)",
+        "multiclass_accuracy": 0.976,
+        "macro_f1": 0.9762,
+        "multiclass_roc_auc": 0.9994
+      }
+    },
+    "clinical": {
+      "nexusbert/heart-disease-random-forest": {
+        "cohort": "Real Deduplicated Cardiology Test Split (n=261)",
+        "accuracy": 0.7279693486590039,
+        "precision": 0.7375886524822695,
+        "sensitivity_recall": 0.7536231884057971,
+        "specificity": 0.6991869918699187,
+        "f1_score": 0.7455197132616488,
+        "false_alarm_rate": 0.3008130081300813,
+        "confusion_matrix": {
+          "tp": 104,
+          "fp": 37,
+          "tn": 86,
+          "fn": 34
+        },
+        "roc_auc": 0.8370743490043595,
+        "pr_auc": 0.8696001982375579
+      }
     }
   }
 }

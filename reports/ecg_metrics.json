@@ -1,0 +1,141 @@
+{
+  "threshold": 0.04516075337305663,
+  "metrics": {
+    "accuracy": 0.99375,
+    "precision": 0.9922480620155039,
+    "sensitivity_recall": 1.0,
+    "specificity": 0.96875,
+    "f1_score": 0.9961089494163424,
+    "false_alarm_rate": 0.03125,
+    "confusion_matrix": {
+      "tp": 1920,
+      "fp": 15,
+      "tn": 465,
+      "fn": 0
+    },
+    "roc_auc": 1.0,
+    "pr_auc": 1.0
+  },
+  "class_names": [
+    "nsr",
+    "pvc",
+    "afib",
+    "st_elevation",
+    "lbbb"
+  ],
+  "models_comparison": {
+    "Conv1dAutoencoder": {
+      "architecture": "Unsupervised 1D CNN Autoencoder (NSR Reconstruction)",
+      "trainable_parameters": 23405,
+      "checkpoint": "saved_models/best_ecg_autoencoder.pt",
+      "binary_anomaly_metrics": {
+        "accuracy": 0.99375,
+        "precision": 0.9922480620155039,
+        "sensitivity_recall": 1.0,
+        "specificity": 0.96875,
+        "f1_score": 0.9961089494163424,
+        "false_alarm_rate": 0.03125,
+        "confusion_matrix": {
+          "tp": 1920,
+          "fp": 15,
+          "tn": 465,
+          "fn": 0
+        },
+        "roc_auc": 1.0,
+        "pr_auc": 1.0
+      }
+    },
+    "ECGResNet1D": {
+      "architecture": "Supervised 4-Stage 1D Residual CNN (5-Class Differential)",
+      "trainable_parameters": 250533,
+      "checkpoint": "saved_models/ecg_resnet1d.pt",
+      "binary_anomaly_metrics": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "sensitivity_recall": 1.0,
+        "specificity": 1.0,
+        "f1_score": 1.0,
+        "false_alarm_rate": 0.0,
+        "confusion_matrix": {
+          "tp": 1920,
+          "fp": 0,
+          "tn": 480,
+          "fn": 0
+        },
+        "roc_auc": 1.0,
+        "pr_auc": 1.0
+      },
+      "multiclass_metrics": {
+        "multiclass_accuracy": 1.0,
+        "macro_f1": 1.0,
+        "multiclass_roc_auc": 1.0
+      }
+    },
+    "ECGMorphologyLightGBM": {
+      "architecture": "18-Feature Electrophysiology + FFT LightGBM Classifier",
+      "trainable_parameters": 18,
+      "checkpoint": "saved_models/ecg_lgbm.joblib",
+      "binary_anomaly_metrics": {
+        "accuracy": 0.99125,
+        "precision": 0.995822454308094,
+        "sensitivity_recall": 0.9932291666666667,
+        "specificity": 0.9833333333333333,
+        "f1_score": 0.9945241199478487,
+        "false_alarm_rate": 0.016666666666666666,
+        "confusion_matrix": {
+          "tp": 1907,
+          "fp": 8,
+          "tn": 472,
+          "fn": 13
+        },
+        "roc_auc": 0.9994563802083333,
+        "pr_auc": 0.9998651416293125
+      },
+      "multiclass_metrics": {
+        "multiclass_accuracy": 0.9904,
+        "macro_f1": 0.9904,
+        "multiclass_roc_auc": 0.9998
+      }
+    },
+    "ECGMorphologyHistGB": {
+      "architecture": "18-Feature Electrophysiology + FFT HistGradientBoosting",
+      "trainable_parameters": 18,
+      "checkpoint": "saved_models/ecg_lgbm.joblib",
+      "binary_anomaly_metrics": {
+        "accuracy": 0.9925,
+        "precision": 0.9958289885297185,
+        "sensitivity_recall": 0.9947916666666666,
+        "specificity": 0.9833333333333333,
+        "f1_score": 0.9953100573215217,
+        "false_alarm_rate": 0.016666666666666666,
+        "confusion_matrix": {
+          "tp": 1910,
+          "fp": 8,
+          "tn": 472,
+          "fn": 10
+        },
+        "roc_auc": 0.9995203993055555,
+        "pr_auc": 0.9998810800288094
+      },
+      "multiclass_metrics": {
+        "multiclass_accuracy": 0.9921,
+        "macro_f1": 0.9921,
+        "multiclass_roc_auc": 0.9998
+      }
+    }
+  },
+  "mitbih_benchmark": {
+    "dataset": "dheerajthuvara/ecg-arrhythmia-data (10k real stratified beats)",
+    "classes": [
+      "A",
+      "L",
+      "N",
+      "R",
+      "V"
+    ],
+    "checkpoint": "saved_models/ecg_mitbih_resnet1d.pt",
+    "multiclass_accuracy": 0.954,
+    "macro_f1": 0.9541,
+    "multiclass_roc_auc": 0.9965
+  }
+}

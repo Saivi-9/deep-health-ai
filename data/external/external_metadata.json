@@ -1,0 +1,28 @@
+{
+  "pneumoniamnist": {
+    "dataset": "danjacobellis/pneumoniamnist_224",
+    "total_images": 1148,
+    "normal_count": 369,
+    "pneumonia_count": 779,
+    "manifest_path": ".\\data\\external\\pneumoniamnist_manifest.csv"
+  },
+  "mitbih_ecg": {
+    "dataset": "dheerajthuvara/ecg-arrhythmia-data",
+    "total_beats": 10000,
+    "beat_length": 180,
+    "classes": [
+      "A",
+      "L",
+      "N",
+      "R",
+      "V"
+    ],
+    "npz_path": ".\\data\\external\\mitbih_10k.npz"
+  },
+  "cardiology_ehr": {
+    "dataset": "BenchmarkDatasets/Heart-Disease-Dataset-_Comprehensive + TabBioMed/HeartDisease_UCI",
+    "total_patients": 1305,
+    "positive_rate": 0.5303,
+    "csv_path": ".\\data\\external\\cardiology_triage.csv"
+  }
+}

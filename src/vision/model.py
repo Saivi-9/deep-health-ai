@@ -1,17 +1,14 @@
 """
-Residual Convolutional Neural Network with Spatial Attention for Medical Diagnostics
-------------------------------------------------------------------------------------
-Architecture:
-- Initial feature extraction with 3x3 Conv + BatchNorm
-- Hierarchical Residual Blocks with identity shortcut projections
-- Spatial Attention gating mechanism
-- Global Adaptive Average Pooling
-- Diagnostic Classification Head with Dropout regularization
+Vision Architectures for Chest Radiograph Diagnostics
+------------------------------------------------------
+1. ResidualChestCNN: Custom 4-stage Residual CNN with CBAM Spatial Attention + Dropout
+2. TransferChestClassifier: ImageNet-pretrained ResNet18 / MobileNetV2 backbones
+   adapted cleanly for 1-channel radiographic inputs with MC-Dropout uncertainty heads.
 """
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+from torchvision import models
 
 
 class SpatialAttention(nn.Module):
@@ -106,3 +103,54 @@ class ResidualChestCNN(nn.Module):
         out = torch.flatten(out, 1)
         out = self.classifier(out)
         return out
+
+
+class TransferChestClassifier(nn.Module):
+    """
+    Transfer Learning Chest Radiograph Classifier wrapping pretrained
+    TorchVision backbones (ResNet18, MobileNetV2) with MC-Dropout classification heads
+    and exposed Grad-CAM target layer (`gradcam_layer`).
+    """
+
+    def __init__(self, arch: str = "resnet18", num_classes: int = 2, pretrained: bool = True, freeze_stem: bool = True):
+        super().__init__()
+        self.arch = arch
+        if arch == "resnet18":
+            weights = models.ResNet18_Weights.DEFAULT if pretrained else None
+            backbone = models.resnet18(weights=weights)
+            if freeze_stem and pretrained:
+                for name, param in backbone.named_parameters():
+                    if not (name.startswith("layer4") or name.startswith("fc")):
+                        param.requires_grad = False
+            in_features = backbone.fc.in_features
+            backbone.fc = nn.Sequential(
+                nn.Dropout(p=0.30),
+                nn.Linear(in_features, 128),
+                nn.ReLU(inplace=True),
+                nn.Dropout(p=0.20),
+                nn.Linear(128, num_classes),
+            )
+            self.backbone = backbone
+            self.gradcam_layer = self.backbone.layer4[-1]
+        elif arch == "mobilenet_v2":
+            weights = models.MobileNet_V2_Weights.DEFAULT if pretrained else None
+            backbone = models.mobilenet_v2(weights=weights)
+            if freeze_stem and pretrained:
+                for i, child in enumerate(backbone.features):
+                    if i < 14:
+                        for p in child.parameters():
+                            p.requires_grad = False
+            in_features = backbone.classifier[1].in_features
+            backbone.classifier = nn.Sequential(
+                nn.Dropout(p=0.30),
+                nn.Linear(in_features, num_classes),
+            )
+            self.backbone = backbone
+            self.gradcam_layer = self.backbone.features[-1]
+        else:
+            raise ValueError(f"Unsupported transfer architecture: {arch}")
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if x.shape[1] == 1:
+            x = x.repeat(1, 3, 1, 1)
+        return self.backbone(x)

@@ -1,26 +1,34 @@
 """
-Vision Model Trainer with Regularization & Early Stopping
----------------------------------------------------------
-Coordinates PyTorch training lifecycle:
-- Optimizer: AdamW with L2 weight decay
-- Learning Rate Scheduler: Cosine Annealing
-- Early Stopping on validation loss
-- Checkpoint persistence
+Vision Model Trainers with Regularization, Early Stopping & Radiomics Gradient Boosting
+----------------------------------------------------------------------------------------
+1. VisionTrainer: End-to-end PyTorch trainer (AdamW + CosineAnnealingLR + Early Stopping)
+   supporting ResidualChestCNN and TransferChestClassifier backbones.
+2. train_radiomic_lgbm: Extracts 14 quantitative radiomic biomarkers strictly inside each
+   split and fits a leak-free StandardScaler + LightGBM classifier pipeline.
 """
 
 import os
 import copy
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
+import numpy as np
+from PIL import Image
+import joblib
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from lightgbm import LGBMClassifier
+
 from ..utils.logger import get_logger
+from ..utils.metrics import compute_classification_metrics
+from .radiology_tools import RADIOMIC_FEATURE_NAMES, extract_radiomic_features
 
 logger = get_logger("VisionTrainer")
 
 
 class VisionTrainer:
-    """End-to-end training manager for the Chest Radiograph CNN."""
+    """End-to-end training manager for PyTorch Chest Radiograph classifiers."""
 
     def __init__(
         self,
@@ -41,8 +49,9 @@ class VisionTrainer:
         self.patience = patience
 
         self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=num_epochs, eta_min=1e-6)
+        trainable_params = [p for p in self.model.parameters() if p.requires_grad]
+        self.optimizer = torch.optim.AdamW(trainable_params or self.model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=max(1, num_epochs), eta_min=1e-6)
 
         self.history: Dict[str, List[float]] = {
             "train_loss": [],
@@ -53,7 +62,7 @@ class VisionTrainer:
         self.best_model_weights = None
         self.best_val_loss = float("inf")
 
-    def train_epoch(self) -> (float, float):
+    def train_epoch(self) -> Tuple[float, float]:
         self.model.train()
         running_loss = 0.0
         correct = 0
@@ -72,11 +81,11 @@ class VisionTrainer:
             total += labels.size(0)
             correct += predicted.eq(labels).sum().item()
 
-        epoch_loss = running_loss / total
-        epoch_acc = (correct / total) * 100.0
+        epoch_loss = running_loss / max(1, total)
+        epoch_acc = (correct / max(1, total)) * 100.0
         return epoch_loss, epoch_acc
 
-    def evaluate_val(self) -> (float, float):
+    def evaluate_val(self) -> Tuple[float, float]:
         self.model.eval()
         running_loss = 0.0
         correct = 0
@@ -93,8 +102,8 @@ class VisionTrainer:
                 total += labels.size(0)
                 correct += predicted.eq(labels).sum().item()
 
-        val_loss = running_loss / total
-        val_acc = (correct / total) * 100.0
+        val_loss = running_loss / max(1, total)
+        val_acc = (correct / max(1, total)) * 100.0
         return val_loss, val_acc
 
     def fit(self, save_path: str = "saved_models/best_chest_cnn.pt") -> Dict[str, List[float]]:
@@ -117,7 +126,6 @@ class VisionTrainer:
                 f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2f}%"
             )
 
-            # Checkpoint tracking
             if val_loss < self.best_val_loss:
                 self.best_val_loss = val_loss
                 self.best_model_weights = copy.deepcopy(self.model.state_dict())
@@ -135,3 +143,68 @@ class VisionTrainer:
             logger.info(f"Loaded best checkpoint (Val Loss: {self.best_val_loss:.4f})")
 
         return self.history
+
+
+def extract_radiomic_matrix(file_paths: List[str]) -> np.ndarray:
+    """Computes the (N, 14) radiomic feature matrix for a list of image paths."""
+    rows = []
+    for path in file_paths:
+        img = Image.open(path).convert("L").resize((128, 128), Image.Resampling.BILINEAR)
+        feats = extract_radiomic_features(np.asarray(img, dtype=np.float32))
+        rows.append([feats[k] for k in RADIOMIC_FEATURE_NAMES])
+    return np.asarray(rows, dtype=np.float32)
+
+
+def train_radiomic_lgbm(
+    train_files: List[str],
+    train_labels: List[int],
+    test_files: List[str],
+    test_labels: List[int],
+    real_test_files: List[str] | None = None,
+    real_test_labels: List[int] | None = None,
+    save_path: str = "saved_models/vision_radiomic_lgbm.joblib",
+) -> Tuple[Pipeline, Dict[str, Any], Dict[str, Any] | None]:
+    """
+    Trains a leak-free Radiomics-14 StandardScaler + LightGBM classifier strictly on `train_files`
+    and evaluates on held-out `test_files` and optional isolated real PneumoniaMNIST test images.
+    """
+    logger.info(f"Extracting 14 Radiomic biomarkers on train (n={len(train_files)}) & test (n={len(test_files)})...")
+    X_train = extract_radiomic_matrix(train_files)
+    y_train = np.asarray(train_labels, dtype=np.int64)
+    X_test = extract_radiomic_matrix(test_files)
+    y_test = np.asarray(test_labels, dtype=np.int64)
+
+    pipeline = Pipeline([
+        ("scaler", StandardScaler()),
+        ("lgbm", LGBMClassifier(
+            n_estimators=220,
+            learning_rate=0.05,
+            num_leaves=31,
+            subsample=0.85,
+            colsample_bytree=0.85,
+            random_state=42,
+            verbose=-1,
+        )),
+    ])
+    pipeline.fit(X_train, y_train)
+
+    test_probs = pipeline.predict_proba(X_test)[:, 1]
+    test_preds = (test_probs >= 0.5).astype(int)
+    test_metrics = compute_classification_metrics(y_test, test_preds, test_probs)
+    logger.info(
+        f"=== Vision Evaluation [Radiomic-14 LightGBM] === Accuracy: {test_metrics['accuracy']*100:.2f}% | "
+        f"ROC-AUC: {test_metrics.get('roc_auc', 0):.4f}"
+    )
+
+    real_metrics = None
+    if real_test_files and real_test_labels:
+        X_real = extract_radiomic_matrix(real_test_files)
+        y_real = np.asarray(real_test_labels, dtype=np.int64)
+        real_probs = pipeline.predict_proba(X_real)[:, 1]
+        real_preds = (real_probs >= 0.5).astype(int)
+        real_metrics = compute_classification_metrics(y_real, real_preds, real_probs)
+
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    joblib.dump({"pipeline": pipeline, "feature_names": RADIOMIC_FEATURE_NAMES}, save_path)
+    logger.info(f"Saved Radiomic LightGBM artifact to {save_path}")
+    return pipeline, test_metrics, real_metrics

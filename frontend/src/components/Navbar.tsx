@@ -1,111 +1,125 @@
-import React, { useState, useEffect } from 'react';
-import { Activity, ShieldCheck, Cpu, Clock, Stethoscope, Layers, FileText } from 'lucide-react';
-import type { HealthResponse } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Activity,
+  ShieldCheck,
+  Cpu,
+  Clock,
+  Stethoscope,
+  Layers,
+  FileText,
+  HeartPulse,
+  Sparkles,
+} from 'lucide-react';
+import type { HealthResponse, ActiveTab } from '../types';
 
 interface NavbarProps {
-  activeTab: 'radiology' | 'ecg' | 'batch' | 'governance';
-  setActiveTab: (tab: 'radiology' | 'ecg' | 'batch' | 'governance') => void;
+  activeTab: ActiveTab;
+  setActiveTab: (tab: ActiveTab) => void;
   health: HealthResponse | null;
 }
 
+const TABS: { id: ActiveTab; label: string; icon: React.ReactNode; activeColor: string }[] = [
+  { id: 'radiology', label: 'Radiology', icon: <Stethoscope className="w-3.5 h-3.5" />, activeColor: 'text-clinical-cyan' },
+  { id: 'ecg', label: '1D ECG', icon: <Activity className="w-3.5 h-3.5" />, activeColor: 'text-clinical-teal' },
+  { id: 'clinical', label: 'Cardiology Triage', icon: <HeartPulse className="w-3.5 h-3.5" />, activeColor: 'text-clinical-rose' },
+  { id: 'pretrained', label: 'HF Model Hub', icon: <Sparkles className="w-3.5 h-3.5" />, activeColor: 'text-amber-300' },
+  { id: 'batch', label: 'Cohort Eval', icon: <Layers className="w-3.5 h-3.5" />, activeColor: 'text-clinical-purple' },
+  { id: 'governance', label: 'Benchmarks', icon: <FileText className="w-3.5 h-3.5" />, activeColor: 'text-clinical-green' },
+];
+
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, health }) => {
-  const [time, setTime] = useState<string>(new Date().toLocaleTimeString());
+  const [time, setTime] = useState<string>('--:--:--');
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date().toLocaleTimeString());
-    }, 1000);
-    return () => clearInterval(timer);
+    const tick = () => setTime(new Date().toLocaleTimeString());
+    const initId = window.setTimeout(tick, 0);
+    const timer = window.setInterval(tick, 1000);
+    return () => {
+      window.clearTimeout(initId);
+      window.clearInterval(timer);
+    };
   }, []);
 
+  const handleKeyDown = (e: React.KeyboardEvent, idx: number) => {
+    let next = idx;
+    if (e.key === 'ArrowRight') next = (idx + 1) % TABS.length;
+    else if (e.key === 'ArrowLeft') next = (idx - 1 + TABS.length) % TABS.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = TABS.length - 1;
+    else return;
+    e.preventDefault();
+    setActiveTab(TABS[next].id);
+    tabRefs.current[next]?.focus();
+  };
+
   return (
-    <header className="border-b border-pacs-700 bg-pacs-900/90 backdrop-blur-md sticky top-0 z-50 px-6 py-3">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Brand & Hospital PACS Identifiers */}
+    <header className="border-b border-pacs-700 bg-pacs-900/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-3">
+      <div className="max-w-7xl mx-auto flex flex-col xl:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-clinical-cyan/20 to-blue-600/30 border border-clinical-cyan/40 flex items-center justify-center text-clinical-cyan shadow-lg shadow-clinical-cyan/10">
-            <Activity className="w-6 h-6 animate-pulse" />
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-clinical-cyan/20 to-blue-600/30 border border-clinical-cyan/40 flex items-center justify-center text-clinical-cyan shadow-lg shadow-clinical-cyan/10">
+            <Activity className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-clinical-cyan bg-clip-text text-transparent">
+              <span className="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-clinical-cyan bg-clip-text text-transparent">
                 DEEP HEALTH AI
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-clinical-cyan/10 text-clinical-cyan border border-clinical-cyan/30">
-                PACS WORKSTATION v1.3
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-clinical-cyan/15 text-clinical-cyan border border-clinical-cyan/30">
+                PACS WORKSTATION v2.0
               </span>
             </div>
-            <p className="text-xs text-pacs-300 font-mono">
-              Clinical Decision Support & Electrophysiological Diagnostic Suite
+            <p className="text-[11px] text-pacs-300 font-mono">
+              Multi-Modal Radiology • Electrophysiology • Cardiology EHR • HF Hub
             </p>
           </div>
         </div>
 
-        {/* Workstation Modality Navigation Tabs */}
-        <nav className="flex items-center gap-1.5 bg-pacs-950/80 p-1 rounded-xl border border-pacs-700">
-          <button
-            onClick={() => setActiveTab('radiology')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'radiology'
-                ? 'bg-pacs-700 text-clinical-cyan shadow-sm border border-clinical-cyan/30'
-                : 'text-pacs-300 hover:text-white hover:bg-pacs-800'
-            }`}
-          >
-            <Stethoscope className="w-3.5 h-3.5" />
-            Thoracic Radiology
-          </button>
-
-          <button
-            onClick={() => setActiveTab('ecg')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'ecg'
-                ? 'bg-pacs-700 text-clinical-teal shadow-sm border border-clinical-teal/30'
-                : 'text-pacs-300 hover:text-white hover:bg-pacs-800'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            1D ECG Telemetry
-          </button>
-
-          <button
-            onClick={() => setActiveTab('batch')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'batch'
-                ? 'bg-pacs-700 text-clinical-purple shadow-sm border border-clinical-purple/30'
-                : 'text-pacs-300 hover:text-white hover:bg-pacs-800'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            Cohort Processor
-          </button>
-
-          <button
-            onClick={() => setActiveTab('governance')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'governance'
-                ? 'bg-pacs-700 text-clinical-green shadow-sm border border-clinical-green/30'
-                : 'text-pacs-300 hover:text-white hover:bg-pacs-800'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5" />
-            Model Governance
-          </button>
+        <nav
+          role="tablist"
+          aria-label="Clinical Workstation Modalities"
+          className="pacs-tablist bg-pacs-950/90 p-1 rounded-xl border border-pacs-700"
+        >
+          {TABS.map((t, idx) => {
+            const selected = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                ref={(el) => {
+                  tabRefs.current[idx] = el;
+                }}
+                type="button"
+                role="tab"
+                id={`tab-${t.id}`}
+                aria-selected={selected}
+                aria-controls={`panel-${t.id}`}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => setActiveTab(t.id)}
+                onKeyDown={(e) => handleKeyDown(e, idx)}
+                className={`pacs-tab flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                  selected
+                    ? `bg-pacs-800 ${t.activeColor}`
+                    : 'text-pacs-300 hover:text-white hover:bg-pacs-800/60'
+                }`}
+              >
+                {t.icon}
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
         </nav>
 
-        {/* Live System Telemetry Badges */}
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-2.5 text-xs">
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-pacs-800/80 border border-pacs-700 text-pacs-300 font-mono">
             <Cpu className="w-3.5 h-3.5 text-clinical-cyan" />
-            <span>ACCEL: {health?.device?.toUpperCase() || 'CPU'}</span>
+            <span>{health?.device?.toUpperCase() || 'CPU'}</span>
           </div>
-
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-pacs-800/80 border border-pacs-700 text-pacs-300 font-mono">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-pacs-800/80 border border-pacs-700 font-mono">
             <ShieldCheck className="w-3.5 h-3.5 text-clinical-green" />
-            <span className={health?.status === 'HEALTHY' ? 'text-clinical-green' : 'text-clinical-amber'}>
-              {health?.status === 'HEALTHY' ? 'ONLINE (FASTAPI)' : 'STANDBY'}
+            <span className={health?.status === 'HEALTHY' ? 'text-clinical-green' : 'text-amber-300'}>
+              {health?.status === 'HEALTHY' ? 'LIVE API' : 'CONNECTING'}
             </span>
           </div>
-
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-pacs-800/80 border border-pacs-700 text-pacs-300 font-mono">
             <Clock className="w-3.5 h-3.5 text-slate-400" />
             <span>{time}</span>
