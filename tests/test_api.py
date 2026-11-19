@@ -87,3 +87,15 @@ def test_ecg_screen_too_short():
     payload = {"signal": [0.1, 0.2]}
     response = client.post("/v1/ecg/screen", json=payload)
     assert response.status_code == 400
+
+
+def test_system_diagnostics_endpoint():
+    response = client.get("/v1/system/diagnostics")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] in ("READY", "DEGRADED")
+    assert "device" in data
+    assert "torch_version" in data
+    assert data["checkpoints_total"] == 9
+    assert isinstance(data["checkpoints"], list)
+

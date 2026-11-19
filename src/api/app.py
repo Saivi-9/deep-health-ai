@@ -615,6 +615,42 @@ def pretrained_clinical_infer(payload: ClinicalTriageRequest):
     return infer_pretrained_clinical(patient_dict)
 
 
+@app.get("/v1/system/diagnostics", tags=["System Operations"])
+def system_diagnostics():
+    """Returns real-time checkpoint readiness, artifact sizes, and dataset inventory."""
+    checkpoints = [
+        "saved_models/best_chest_cnn.pt",
+        "saved_models/vision_resnet18.pt",
+        "saved_models/vision_mobilenetv2.pt",
+        "saved_models/vision_radiomic_lgbm.joblib",
+        "saved_models/best_ecg_autoencoder.pt",
+        "saved_models/ecg_resnet1d.pt",
+        "saved_models/ecg_mitbih_resnet1d.pt",
+        "saved_models/ecg_lgbm.joblib",
+        "saved_models/best_clinical_triage.joblib",
+    ]
+    checkpoint_inventory = []
+    for ckpt in checkpoints:
+        exists = os.path.exists(ckpt)
+        size_kb = round(os.path.getsize(ckpt) / 1024.0, 2) if exists else 0.0
+        checkpoint_inventory.append({
+            "path": ckpt,
+            "available": exists,
+            "size_kb": size_kb,
+        })
+
+    available_count = sum(1 for c in checkpoint_inventory if c["available"])
+    return {
+        "status": "READY" if available_count > 0 else "DEGRADED",
+        "device": DEVICE,
+        "torch_version": torch.__version__,
+        "checkpoints_available": available_count,
+        "checkpoints_total": len(checkpoint_inventory),
+        "checkpoints": checkpoint_inventory,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 # Mount Production React PACS Frontend if built
 frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
 if os.path.exists(frontend_dist):
