@@ -1,0 +1,146 @@
+"""
+Clinical Cardiology EHR Feature Engineering & Multi-Modal Triage Fusion
+-----------------------------------------------------------------------
+Derives 20 deterministic physiological & cardiovascular stress biomarkers
+(11 raw EHR attributes + 9 domain-specific interactions) with zero population leakage,
+plus multimodal cardiopulmonary triage fusion across EHR + CXR + ECG.
+"""
+
+from typing import Dict, Any, List, Optional
+import numpy as np
+import pandas as pd
+
+RAW_CLINICAL_FEATURES: List[str] = [
+    "age",
+    "sex",
+    "chest_pain_type",
+    "resting_bp",
+    "cholesterol",
+    "fasting_bs",
+    "resting_ecg",
+    "max_hr",
+    "exercise_angina",
+    "oldpeak",
+    "st_slope",
+]
+
+ENGINEERED_CLINICAL_FEATURES: List[str] = [
+    "estimated_max_hr_pct",
+    "rate_pressure_product",
+    "age_x_oldpeak",
+    "st_severity_index",
+    "metabolic_risk_count",
+    "angina_pain_interaction",
+    "cholesterol_to_age",
+    "cardiac_ischemia_burden",
+    "chronotropic_incompetence_flag",
+]
+
+CLINICAL_FEATURE_NAMES: List[str] = RAW_CLINICAL_FEATURES + ENGINEERED_CLINICAL_FEATURES
+
+
+def engineer_clinical_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Applies row-wise deterministic clinical feature engineering without computing
+    dataset-wide statistics (preserving NaNs for leak-free fold SimpleImputer).
+    """
+    out = df[RAW_CLINICAL_FEATURES].copy()
+    for col in RAW_CLINICAL_FEATURES:
+        out[col] = pd.to_numeric(out[col], errors="coerce")
+
+    age_safe = out["age"].clip(lower=18.0)
+    predicted_max = (220.0 - age_safe).clip(lower=60.0)
+    out["estimated_max_hr_pct"] = (out["max_hr"] / predicted_max).astype(np.float32)
+
+    # Preserve NaN when resting_bp or max_hr is missing so training-fold imputer handles it
+    out["rate_pressure_product"] = ((out["resting_bp"] * out["max_hr"]) / 1000.0).astype(np.float32)
+
+    oldpeak_pos = out["oldpeak"].clip(lower=0.0)
+    out["age_x_oldpeak"] = (age_safe * oldpeak_pos).astype(np.float32)
+    out["st_severity_index"] = ((oldpeak_pos + 0.5) * (1.0 + out["exercise_angina"].fillna(0.0))).astype(np.float32)
+
+    bp_high = (out["resting_bp"] >= 140.0).astype(float)
+    chol_high = (out["cholesterol"] >= 240.0).astype(float)
+    fbs_high = (out["fasting_bs"] == 1.0).astype(float)
+    out["metabolic_risk_count"] = (bp_high + chol_high + fbs_high).astype(np.float32)
+
+    out["angina_pain_interaction"] = (out["exercise_angina"] * out["chest_pain_type"]).astype(np.float32)
+    out["cholesterol_to_age"] = (out["cholesterol"] / age_safe).astype(np.float32)
+
+    ischemia_score = (
+        (oldpeak_pos > 1.0).astype(float)
+        + (out["st_slope"] != 1).astype(float)
+        + (out["chest_pain_type"] == 4).astype(float)
+    )
+    out["cardiac_ischemia_burden"] = ischemia_score.astype(np.float32)
+    out["chronotropic_incompetence_flag"] = ((out["max_hr"] < (0.80 * predicted_max)).astype(float)).astype(np.float32)
+
+    return out[CLINICAL_FEATURE_NAMES]
+
+
+def compute_multimodal_triage_score(
+    ehr_cad_probability: float,
+    patient: Dict[str, Any],
+    cxr_pneumonia_probability: Optional[float] = None,
+    ecg_is_anomaly: Optional[bool] = None,
+    ecg_reconstruction_mse: Optional[float] = None,
+) -> Dict[str, Any]:
+    """
+    Combines calibrated EHR coronary risk probability with optional Chest X-Ray & ECG findings
+    into an actionable cardiopulmonary acuity index and factor breakdown.
+    """
+    fused = float(np.clip(ehr_cad_probability, 0.0, 1.0))
+    modifiers: List[str] = []
+
+    if cxr_pneumonia_probability is not None:
+        if cxr_pneumonia_probability >= 0.65:
+            fused = float(min(0.99, fused + 0.10 * cxr_pneumonia_probability))
+            modifiers.append(f"Concomitant alveolar consolidation (+{cxr_pneumonia_probability*100:.0f}% CXR confidence)")
+        else:
+            modifiers.append(f"Chest radiograph clear ({(1-cxr_pneumonia_probability)*100:.0f}% normal parenchyma)")
+
+    if ecg_is_anomaly is not None:
+        if ecg_is_anomaly:
+            fused = float(min(0.99, fused + 0.12))
+            mse_txt = f" (MSE={ecg_reconstruction_mse:.4f})" if ecg_reconstruction_mse is not None else ""
+            modifiers.append(f"Active ECG arrhythmia / ectopic conduction abnormality{mse_txt}")
+        else:
+            modifiers.append("Lead-II ECG within normal sinus manifold")
+
+    # Key clinical driver explanations
+    drivers: List[Dict[str, Any]] = []
+    if float(patient.get("oldpeak", 0.0) or 0.0) >= 1.5:
+        drivers.append({"factor": "Exercise ST Depression (Oldpeak)", "value": f"{patient['oldpeak']} mm", "impact": "HIGH"})
+    if int(patient.get("exercise_angina", 0) or 0) == 1:
+        drivers.append({"factor": "Exercise-Induced Angina", "value": "Present", "impact": "HIGH"})
+    if int(patient.get("chest_pain_type", 1) or 1) == 4:
+        drivers.append({"factor": "Asymptomatic / Atypical Ischemic Chest Pain", "value": "Type 4", "impact": "MODERATE"})
+    if float(patient.get("max_hr", 150) or 150) < 120:
+        drivers.append({"factor": "Chronotropic Reserve Limitation", "value": f"{patient['max_hr']} bpm", "impact": "MODERATE"})
+    if float(patient.get("resting_bp", 120) or 120) >= 140:
+        drivers.append({"factor": "Resting Arterial Hypertension", "value": f"{patient['resting_bp']} mmHg", "impact": "MODERATE"})
+    if float(patient.get("cholesterol", 200) or 200) >= 240:
+        drivers.append({"factor": "Hyperlipidemia (Serum Cholesterol)", "value": f"{patient['cholesterol']} mg/dL", "impact": "MODERATE"})
+    if not drivers:
+        drivers.append({"factor": "Hemodynamic & Metabolic Profile", "value": "Within reference bounds", "impact": "LOW"})
+
+    if fused >= 0.78:
+        tier = "CRITICAL - STAT CARDIOLOGY / ICU TELEMETRY"
+        urgency = "Immediate"
+    elif fused >= 0.55:
+        tier = "HIGH - PRIORITY CARDIOLOGY WORKUP"
+        urgency = "Urgent (< 4h)"
+    elif fused >= 0.35:
+        tier = "MODERATE - OUTPATIENT STRESS ECHO / HOLTER"
+        urgency = "Scheduled (24-72h)"
+    else:
+        tier = "LOW RISK - ROUTINE PRIMARY CARE"
+        urgency = "Routine"
+
+    return {
+        "fused_risk_score": round(fused, 4),
+        "triage_tier": tier,
+        "recommended_urgency": urgency,
+        "multimodal_modifiers": modifiers,
+        "clinical_risk_drivers": drivers,
+    }

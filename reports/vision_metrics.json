@@ -1,0 +1,173 @@
+{
+  "accuracy": 0.8731501057082452,
+  "precision": 0.9330543933054394,
+  "sensitivity_recall": 0.8352059925093633,
+  "specificity": 0.9223300970873787,
+  "f1_score": 0.8814229249011858,
+  "false_alarm_rate": 0.07766990291262135,
+  "confusion_matrix": {
+    "tp": 223,
+    "fp": 16,
+    "tn": 190,
+    "fn": 44
+  },
+  "roc_auc": 0.923057343369332,
+  "pr_auc": 0.9513075962849389,
+  "dataset_summary": {
+    "train_samples": 2203,
+    "val_samples": 472,
+    "test_samples": 473,
+    "total_samples": 3148,
+    "real_pneumoniamnist_test_samples": 624
+  },
+  "models_comparison": {
+    "ResidualChestCNN": {
+      "architecture": "4-Stage Residual CNN + SpatialAttention + MC Dropout",
+      "trainable_parameters": 1242500,
+      "checkpoint": "saved_models/best_chest_cnn.pt",
+      "unified_test_metrics": {
+        "accuracy": 0.8731501057082452,
+        "precision": 0.9330543933054394,
+        "sensitivity_recall": 0.8352059925093633,
+        "specificity": 0.9223300970873787,
+        "f1_score": 0.8814229249011858,
+        "false_alarm_rate": 0.07766990291262135,
+        "confusion_matrix": {
+          "tp": 223,
+          "fp": 16,
+          "tn": 190,
+          "fn": 44
+        },
+        "roc_auc": 0.923057343369332,
+        "pr_auc": 0.9513075962849389
+      },
+      "real_pneumoniamnist_metrics": {
+        "accuracy": 0.8685897435897436,
+        "precision": 0.8532110091743119,
+        "sensitivity_recall": 0.9538461538461539,
+        "specificity": 0.7264957264957265,
+        "f1_score": 0.9007263922518159,
+        "false_alarm_rate": 0.27350427350427353,
+        "confusion_matrix": {
+          "tp": 372,
+          "fp": 64,
+          "tn": 170,
+          "fn": 18
+        },
+        "roc_auc": 0.9366863905325444,
+        "pr_auc": 0.9607539537981348
+      }
+    },
+    "TransferResNet18": {
+      "architecture": "ImageNet-Pretrained ResNet18 Backbone + MC-Dropout Head",
+      "trainable_parameters": 8459650,
+      "checkpoint": "saved_models/vision_resnet18.pt",
+      "unified_test_metrics": {
+        "accuracy": 0.9133192389006343,
+        "precision": 0.959349593495935,
+        "sensitivity_recall": 0.8838951310861424,
+        "specificity": 0.9514563106796117,
+        "f1_score": 0.9200779727095516,
+        "false_alarm_rate": 0.04854368932038835,
+        "confusion_matrix": {
+          "tp": 236,
+          "fp": 10,
+          "tn": 196,
+          "fn": 31
+        },
+        "roc_auc": 0.9825642703901676,
+        "pr_auc": 0.9873530498356476
+      },
+      "real_pneumoniamnist_metrics": {
+        "accuracy": 0.9567307692307693,
+        "precision": 0.978891820580475,
+        "sensitivity_recall": 0.9512820512820512,
+        "specificity": 0.9658119658119658,
+        "f1_score": 0.9648894668400521,
+        "false_alarm_rate": 0.03418803418803419,
+        "confusion_matrix": {
+          "tp": 371,
+          "fp": 8,
+          "tn": 226,
+          "fn": 19
+        },
+        "roc_auc": 0.9926473811089196,
+        "pr_auc": 0.9955053032073096
+      }
+    },
+    "TransferMobileNetV2": {
+      "architecture": "ImageNet-Pretrained MobileNetV2 Backbone + MC-Dropout Head",
+      "trainable_parameters": 1683906,
+      "checkpoint": "saved_models/vision_mobilenetv2.pt",
+      "unified_test_metrics": {
+        "accuracy": 0.9069767441860465,
+        "precision": 0.9704641350210971,
+        "sensitivity_recall": 0.8614232209737828,
+        "specificity": 0.9660194174757282,
+        "f1_score": 0.9126984126984127,
+        "false_alarm_rate": 0.03398058252427184,
+        "confusion_matrix": {
+          "tp": 230,
+          "fp": 7,
+          "tn": 199,
+          "fn": 37
+        },
+        "roc_auc": 0.9611105050725428,
+        "pr_auc": 0.9759937610558178
+      },
+      "real_pneumoniamnist_metrics": {
+        "accuracy": 0.9631410256410257,
+        "precision": 0.9669211195928753,
+        "sensitivity_recall": 0.9743589743589743,
+        "specificity": 0.9444444444444444,
+        "f1_score": 0.9706257982120051,
+        "false_alarm_rate": 0.05555555555555555,
+        "confusion_matrix": {
+          "tp": 380,
+          "fp": 13,
+          "tn": 221,
+          "fn": 10
+        },
+        "roc_auc": 0.9910585141354371,
+        "pr_auc": 0.9942752739100994
+      }
+    },
+    "RadiomicLightGBM": {
+      "architecture": "14 First-Order/Texture/Spatial Radiomic Features + LightGBM",
+      "trainable_parameters": 14,
+      "checkpoint": "saved_models/vision_radiomic_lgbm.joblib",
+      "unified_test_metrics": {
+        "accuracy": 0.8350951374207188,
+        "precision": 0.8795180722891566,
+        "sensitivity_recall": 0.8202247191011236,
+        "specificity": 0.8543689320388349,
+        "f1_score": 0.8488372093023255,
+        "false_alarm_rate": 0.14563106796116504,
+        "confusion_matrix": {
+          "tp": 219,
+          "fp": 30,
+          "tn": 176,
+          "fn": 48
+        },
+        "roc_auc": 0.9017490273080977,
+        "pr_auc": 0.9270012407803249
+      },
+      "real_pneumoniamnist_metrics": {
+        "accuracy": 0.9599358974358975,
+        "precision": 0.9596977329974811,
+        "sensitivity_recall": 0.9769230769230769,
+        "specificity": 0.9316239316239316,
+        "f1_score": 0.9682337992376112,
+        "false_alarm_rate": 0.06837606837606838,
+        "confusion_matrix": {
+          "tp": 381,
+          "fp": 16,
+          "tn": 218,
+          "fn": 9
+        },
+        "roc_auc": 0.9859631821170283,
+        "pr_auc": 0.9912648675705853
+      }
+    }
+  }
+}

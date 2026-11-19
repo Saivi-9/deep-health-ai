@@ -1,9 +1,16 @@
 {
   "vision": {
-    "total_images": 400,
+    "total_images": 2000,
+    "external_real_images": 1148,
     "classes": [
       "Normal",
       "Pneumonia"
+    ],
+    "subtypes": [
+      "Normal",
+      "Lobar_Bacterial",
+      "Interstitial_Viral",
+      "Subtle_Early"
     ],
     "resolution": [
       128,
@@ -12,10 +19,23 @@
     "channels": 1
   },
   "ecg": {
-    "train_normal_beats": 800,
-    "val_normal_beats": 200,
-    "test_total_beats": 200,
-    "test_anomaly_ratio": 0.5,
+    "train_normal_beats": 2500,
+    "val_normal_beats": 600,
+    "supervised_train_beats": 2000,
+    "test_total_beats": 2400,
+    "external_real_mitbih_beats": 10000,
+    "test_anomaly_ratio": 0.8,
+    "rhythm_classes": [
+      "nsr",
+      "pvc",
+      "afib",
+      "st_elevation",
+      "lbbb"
+    ],
     "signal_length": 256
+  },
+  "clinical_ehr": {
+    "external_real_patients": 1305,
+    "positive_rate": 0.5303
   }
 }

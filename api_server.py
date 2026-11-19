@@ -18,8 +18,8 @@ def main():
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload on code change")
     args = parser.parse_args()
 
-    print(f"🩺 Starting Deep Health AI REST API on http://{args.host}:{args.port}")
-    print(f"📖 OpenAPI Swagger UI available at: http://{args.host}:{args.port}/docs")
+    print(f"[Deep Health AI] Starting REST API & PACS Studio on http://{args.host}:{args.port}")
+    print(f"[Deep Health AI] Interactive Swagger UI available at: http://{args.host}:{args.port}/docs")
 
     uvicorn.run("src.api.app:app", host=args.host, port=args.port, reload=args.reload)
 
