@@ -640,6 +640,12 @@ def system_diagnostics():
         })
 
     available_count = sum(1 for c in checkpoint_inventory if c["available"])
+    datasets = {
+        "pneumoniamnist_manifest": os.path.exists("data/external/pneumoniamnist_manifest.csv"),
+        "mitbih_10k": os.path.exists("data/external/mitbih_10k.npz"),
+        "cardiology_triage": os.path.exists("data/external/cardiology_triage.csv"),
+        "ecg_lead_ii_test": os.path.exists("data/ecg/ecg_test.npy"),
+    }
     return {
         "status": "READY" if available_count > 0 else "DEGRADED",
         "device": DEVICE,
@@ -647,7 +653,28 @@ def system_diagnostics():
         "checkpoints_available": available_count,
         "checkpoints_total": len(checkpoint_inventory),
         "checkpoints": checkpoint_inventory,
+        "datasets_available": datasets,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.get("/v1/clinical/biomarker-reference", tags=["Cardiology EHR Triage"])
+def get_clinical_biomarker_reference():
+    """Returns clinical reference ranges, units, and diagnostic risk thresholds for cardiology EHR biomarkers."""
+    reference_catalog = [
+        {"feature": "age", "unit": "years", "normal_range": "18-65", "elevated_threshold": "> 60", "category": "Demographic"},
+        {"feature": "resting_bp", "unit": "mmHg", "normal_range": "90-120", "elevated_threshold": ">= 140", "category": "Hemodynamic"},
+        {"feature": "cholesterol", "unit": "mg/dL", "normal_range": "125-200", "elevated_threshold": ">= 240", "category": "Metabolic Lipid"},
+        {"feature": "fasting_bs", "unit": "binary (>120 mg/dL)", "normal_range": "0", "elevated_threshold": "1", "category": "Glycemic"},
+        {"feature": "max_hr", "unit": "bpm", "normal_range": "140-190", "elevated_threshold": "< 120 (Chronotropic Incompetence)", "category": "Electrophysiology"},
+        {"feature": "oldpeak", "unit": "mV ST depression", "normal_range": "0.0-0.5", "elevated_threshold": ">= 1.5", "category": "Myocardial Ischemia"},
+        {"feature": "ca", "unit": "fluoroscopy vessels (0-3)", "normal_range": "0", "elevated_threshold": ">= 1", "category": "Coronary Anatomy"},
+    ]
+    return {
+        "raw_feature_count": len(RAW_CLINICAL_FEATURES),
+        "engineered_feature_count": 20 - len(RAW_CLINICAL_FEATURES),
+        "total_pipeline_biomarkers": 20,
+        "reference_ranges": reference_catalog,
     }
 
 

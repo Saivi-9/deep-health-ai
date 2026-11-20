@@ -98,4 +98,16 @@ def test_system_diagnostics_endpoint():
     assert "torch_version" in data
     assert data["checkpoints_total"] == 9
     assert isinstance(data["checkpoints"], list)
+    assert "datasets_available" in data
+
+
+def test_clinical_biomarker_reference_endpoint():
+    response = client.get("/v1/clinical/biomarker-reference")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_pipeline_biomarkers"] == 20
+    assert data["raw_feature_count"] == 11
+    assert data["engineered_feature_count"] == 9
+    assert len(data["reference_ranges"]) >= 7
+
 
