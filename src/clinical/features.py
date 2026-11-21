@@ -144,3 +144,113 @@ def compute_multimodal_triage_score(
         "multimodal_modifiers": modifiers,
         "clinical_risk_drivers": drivers,
     }
+
+
+def audit_patient_biomarkers(patient: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Audits a patient EHR dictionary against cardiology clinical thresholds,
+    returning flagged out-of-range biomarkers and 9 engineered physiological features.
+    """
+    raw_row = {col: patient.get(col, 0) for col in RAW_CLINICAL_FEATURES}
+    df_in = pd.DataFrame([raw_row])
+    X_feat = engineer_clinical_features(df_in)
+    engineered = {
+        k: round(float(X_feat[k].iloc[0]), 4)
+        for k in X_feat.columns
+        if k not in RAW_CLINICAL_FEATURES
+    }
+
+    resting_bp = float(patient.get("resting_bp", 120) or 120)
+    cholesterol = float(patient.get("cholesterol", 190) or 190)
+    fasting_bs = int(patient.get("fasting_bs", 0) or 0)
+    max_hr = float(patient.get("max_hr", 150) or 150)
+    oldpeak = float(patient.get("oldpeak", 0.0) or 0.0)
+    ca = int(patient.get("ca", 0) or 0)
+    exercise_angina = int(patient.get("exercise_angina", 0) or 0)
+
+    flags: List[Dict[str, Any]] = []
+    if resting_bp >= 140:
+        flags.append({
+            "feature": "resting_bp",
+            "value": resting_bp,
+            "severity": "CRITICAL" if resting_bp >= 160 else "ELEVATED",
+            "finding": "Stage 2 systolic hypertension (>= 140 mmHg)",
+        })
+    elif resting_bp > 120:
+        flags.append({
+            "feature": "resting_bp",
+            "value": resting_bp,
+            "severity": "BORDERLINE",
+            "finding": "Elevated resting blood pressure (121-139 mmHg)",
+        })
+
+    if cholesterol >= 240:
+        flags.append({
+            "feature": "cholesterol",
+            "value": cholesterol,
+            "severity": "ELEVATED",
+            "finding": "Hypercholesterolemia (>= 240 mg/dL)",
+        })
+    elif cholesterol > 200:
+        flags.append({
+            "feature": "cholesterol",
+            "value": cholesterol,
+            "severity": "BORDERLINE",
+            "finding": "Borderline high total cholesterol (201-239 mg/dL)",
+        })
+
+    if fasting_bs == 1:
+        flags.append({
+            "feature": "fasting_bs",
+            "value": fasting_bs,
+            "severity": "ELEVATED",
+            "finding": "Fasting blood glucose > 120 mg/dL",
+        })
+
+    if max_hr < 120:
+        flags.append({
+            "feature": "max_hr",
+            "value": max_hr,
+            "severity": "ELEVATED",
+            "finding": "Chronotropic incompetence (peak HR < 120 bpm)",
+        })
+
+    if oldpeak >= 1.5:
+        flags.append({
+            "feature": "oldpeak",
+            "value": oldpeak,
+            "severity": "CRITICAL" if oldpeak >= 2.5 else "ELEVATED",
+            "finding": "Significant exercise-induced ST depression (>= 1.5 mV)",
+        })
+
+    if ca >= 1:
+        flags.append({
+            "feature": "ca",
+            "value": ca,
+            "severity": "CRITICAL" if ca >= 2 else "ELEVATED",
+            "finding": f"Fluoroscopic coronary vessel involvement ({ca} major vessels)",
+        })
+
+    if exercise_angina == 1:
+        flags.append({
+            "feature": "exercise_angina",
+            "value": exercise_angina,
+            "severity": "ELEVATED",
+            "finding": "Positive exercise-induced angina pectoris",
+        })
+
+    overall_status = "NORMAL"
+    if any(f["severity"] == "CRITICAL" for f in flags):
+        overall_status = "CRITICAL_FINDINGS"
+    elif any(f["severity"] == "ELEVATED" for f in flags):
+        overall_status = "ELEVATED_FINDINGS"
+    elif flags:
+        overall_status = "BORDERLINE_FINDINGS"
+
+    return {
+        "overall_audit_status": overall_status,
+        "abnormal_biomarker_count": len(flags),
+        "flagged_biomarkers": flags,
+        "engineered_biomarkers": engineered,
+    }
+

@@ -111,3 +111,31 @@ def test_clinical_biomarker_reference_endpoint():
     assert len(data["reference_ranges"]) >= 7
 
 
+def test_clinical_biomarker_audit_endpoint():
+    payload = {
+        "age": 64,
+        "sex": 1,
+        "chest_pain_type": 3,
+        "resting_bp": 165,
+        "cholesterol": 265,
+        "fasting_bs": 1,
+        "resting_ecg": 1,
+        "max_hr": 112,
+        "exercise_angina": 1,
+        "oldpeak": 2.6,
+        "st_slope": 2,
+        "ca": 2,
+        "thal": 3,
+    }
+    response = client.post("/v1/clinical/biomarker-audit", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["overall_audit_status"] == "CRITICAL_FINDINGS"
+    assert data["abnormal_biomarker_count"] >= 5
+    flagged_names = {f["feature"] for f in data["flagged_biomarkers"]}
+    assert "resting_bp" in flagged_names
+    assert "oldpeak" in flagged_names
+    assert len(data["engineered_biomarkers"]) == 9
+
+
+
