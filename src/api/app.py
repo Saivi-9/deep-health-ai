@@ -31,7 +31,12 @@ from src.vision.radiology_tools import compute_consolidation_severity, extract_r
 from src.ecg.model import Conv1dAutoencoder, ECGResNet1D
 from src.ecg.anomaly_detector import ECGAnomalyDetector
 from src.ecg.telemetry import analyze_ecg_telemetry
-from src.clinical.features import engineer_clinical_features, compute_multimodal_triage_score, RAW_CLINICAL_FEATURES
+from src.clinical.features import (
+    engineer_clinical_features,
+    compute_multimodal_triage_score,
+    audit_patient_biomarkers,
+    RAW_CLINICAL_FEATURES,
+)
 from src.pretrained_hub import (
     get_curated_catalog,
     search_hf_medical_models,
@@ -676,6 +681,15 @@ def get_clinical_biomarker_reference():
         "total_pipeline_biomarkers": 20,
         "reference_ranges": reference_catalog,
     }
+
+
+@app.post("/v1/clinical/biomarker-audit", tags=["Cardiology EHR Triage"])
+def audit_clinical_biomarkers(payload: ClinicalTriageRequest):
+    """Audits an individual patient EHR profile against cardiology thresholds and flags out-of-range biomarkers."""
+    result = audit_patient_biomarkers(payload.model_dump())
+    result["timestamp"] = datetime.now(timezone.utc).isoformat()
+    return result
+
 
 
 # Mount Production React PACS Frontend if built

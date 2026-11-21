@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from src.ecg.telemetry import analyze_ecg_telemetry
 from src.vision.radiology_tools import apply_radiology_window, compute_consolidation_severity
+from src.clinical.features import audit_patient_biomarkers
 
 
 def test_ecg_telemetry_fields():
@@ -40,3 +41,45 @@ def test_compute_consolidation_severity():
     sev_severe = compute_consolidation_severity(hot_heatmap)
     assert "Severe" in sev_severe["radiological_severity"]
     assert sev_severe["infiltrate_burden_percentage"] == 100.0
+
+
+def test_audit_patient_biomarkers():
+    healthy = {
+        "age": 38,
+        "sex": 0,
+        "chest_pain_type": 1,
+        "resting_bp": 116,
+        "cholesterol": 182,
+        "fasting_bs": 0,
+        "resting_ecg": 0,
+        "max_hr": 172,
+        "exercise_angina": 0,
+        "oldpeak": 0.1,
+        "st_slope": 1,
+        "ca": 0,
+        "thal": 2,
+    }
+    res_ok = audit_patient_biomarkers(healthy)
+    assert res_ok["overall_audit_status"] == "NORMAL"
+    assert res_ok["abnormal_biomarker_count"] == 0
+    assert len(res_ok["engineered_biomarkers"]) == 9
+
+    critical = {
+        "age": 64,
+        "sex": 1,
+        "chest_pain_type": 3,
+        "resting_bp": 165,
+        "cholesterol": 265,
+        "fasting_bs": 1,
+        "resting_ecg": 1,
+        "max_hr": 112,
+        "exercise_angina": 1,
+        "oldpeak": 2.6,
+        "st_slope": 2,
+        "ca": 2,
+        "thal": 3,
+    }
+    res_crit = audit_patient_biomarkers(critical)
+    assert res_crit["overall_audit_status"] == "CRITICAL_FINDINGS"
+    assert res_crit["abnormal_biomarker_count"] >= 5
+
