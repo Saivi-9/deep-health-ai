@@ -16,12 +16,28 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import joblib
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torchvision import models, transforms as T
-from huggingface_hub import HfApi, hf_hub_download
-from safetensors.torch import load_file
+try:
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    from torchvision import models, transforms as T
+    _NNModule = nn.Module
+except ImportError:  # pragma: no cover
+    torch = None
+    nn = None
+    F = None
+    models = None
+    T = None
+    _NNModule = object
+try:
+    from huggingface_hub import HfApi, hf_hub_download
+except ImportError:  # pragma: no cover
+    HfApi = None
+    hf_hub_download = None
+try:
+    from safetensors.torch import load_file
+except ImportError:  # pragma: no cover
+    load_file = None
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 
 from .utils.logger import get_logger
@@ -85,7 +101,7 @@ CURATED_PRETRAINED_CATALOG: List[Dict[str, Any]] = [
 ]
 
 
-class ECGCNNBiLSTM(nn.Module):
+class ECGCNNBiLSTM(_NNModule):
     """Exact PyTorch architecture for `dheerajthuvara/ecg-arrhythmia-detection`."""
 
     def __init__(self, num_classes: int = 5):
@@ -101,7 +117,7 @@ class ECGCNNBiLSTM(nn.Module):
             nn.Linear(256, 64), nn.ReLU(), nn.Dropout(0.3), nn.Linear(64, num_classes)
         )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Any) -> Any:
         if x.ndim == 2:
             x = x.unsqueeze(1)
         h = self.cnn(x).transpose(1, 2)
