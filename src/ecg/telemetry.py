@@ -159,3 +159,48 @@ def extract_ecg_feature_vector(signal: np.ndarray, sampling_rate: int = 250) -> 
 def extract_ecg_feature_matrix(signals: np.ndarray, sampling_rate: int = 250) -> np.ndarray:
     """Extracts an (N, 18) feature matrix for batch ML training/inference."""
     return np.asarray([extract_ecg_feature_vector(s, sampling_rate=sampling_rate) for s in signals], dtype=np.float32)
+
+
+def summarize_ecg_clinical_risk(
+    telemetry: Dict[str, Any],
+    is_anomaly: bool = False,
+    reconstruction_mse: float = 0.0,
+) -> Dict[str, Any]:
+    """
+    Stratifies 1D ECG electrophysiological telemetry and autoencoder anomaly state
+    into an actionable clinical urgency tier and structured clinical findings.
+    """
+    flags = telemetry.get("clinical_flags", {})
+    findings: List[str] = []
+
+    if flags.get("st_segment_abnormality_ischemia"):
+        findings.append(f"Significant ST-segment deflection ({telemetry.get('st_segment_mv', 0.0):.3f} mV)")
+    if flags.get("wide_qrs_ventricular_conduction_delay"):
+        findings.append(f"Ventricular conduction delay / wide QRS ({telemetry.get('qrs_duration_ms', 0.0):.1f} ms)")
+    if flags.get("prolonged_repolarization_qtc"):
+        findings.append(f"Prolonged Bazett QTc repolarization ({telemetry.get('qtc_interval_ms', 0.0):.1f} ms)")
+    if flags.get("atrial_fibrillation_absent_p_wave"):
+        findings.append("Low P-wave amplitude with elevated high-frequency fibrillation energy")
+    if is_anomaly:
+        findings.append(f"Autoencoder morphological manifold deviation (MSE={reconstruction_mse:.5f})")
+
+    active_flag_count = sum(1 for v in flags.values() if bool(v))
+    if flags.get("st_segment_abnormality_ischemia") or (is_anomaly and active_flag_count >= 2):
+        urgency_tier = "CRITICAL_ELECTROPHYSIOLOGY"
+        recommended_action = "Immediate 12-lead diagnostic ECG & cardiology consultation"
+    elif is_anomaly or active_flag_count >= 1:
+        urgency_tier = "ELEVATED_CONDUCTION_RISK"
+        recommended_action = "Repeat rhythm strip and outpatient Holter / electrolyte panel"
+    else:
+        urgency_tier = "ROUTINE_SINUS_MONITORING"
+        recommended_action = "Continue standard telemetry monitoring"
+
+    return {
+        "urgency_tier": urgency_tier,
+        "active_flag_count": active_flag_count,
+        "is_anomaly": bool(is_anomaly),
+        "reconstruction_mse": round(float(reconstruction_mse), 6),
+        "clinical_findings": findings or ["Normal sinus conduction intervals within reference bounds"],
+        "recommended_action": recommended_action,
+    }
+

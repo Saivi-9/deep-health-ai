@@ -2,7 +2,7 @@
 
 import pytest
 import numpy as np
-from src.ecg.telemetry import analyze_ecg_telemetry
+from src.ecg.telemetry import analyze_ecg_telemetry, summarize_ecg_clinical_risk
 from src.vision.radiology_tools import apply_radiology_window, compute_consolidation_severity
 from src.clinical.features import audit_patient_biomarkers
 
@@ -82,4 +82,38 @@ def test_audit_patient_biomarkers():
     res_crit = audit_patient_biomarkers(critical)
     assert res_crit["overall_audit_status"] == "CRITICAL_FINDINGS"
     assert res_crit["abnormal_biomarker_count"] >= 5
+
+
+def test_summarize_ecg_clinical_risk_tiers():
+    normal_tele = {
+        "qrs_duration_ms": 88.0,
+        "qtc_interval_ms": 405.0,
+        "st_segment_mv": 0.04,
+        "clinical_flags": {
+            "wide_qrs_ventricular_conduction_delay": False,
+            "prolonged_repolarization_qtc": False,
+            "st_segment_abnormality_ischemia": False,
+            "atrial_fibrillation_absent_p_wave": False,
+        },
+    }
+    res_norm = summarize_ecg_clinical_risk(normal_tele, is_anomaly=False, reconstruction_mse=0.004)
+    assert res_norm["urgency_tier"] == "ROUTINE_SINUS_MONITORING"
+    assert res_norm["active_flag_count"] == 0
+
+    crit_tele = {
+        "qrs_duration_ms": 144.0,
+        "qtc_interval_ms": 475.0,
+        "st_segment_mv": 0.35,
+        "clinical_flags": {
+            "wide_qrs_ventricular_conduction_delay": True,
+            "prolonged_repolarization_qtc": True,
+            "st_segment_abnormality_ischemia": True,
+            "atrial_fibrillation_absent_p_wave": False,
+        },
+    }
+    res_crit = summarize_ecg_clinical_risk(crit_tele, is_anomaly=True, reconstruction_mse=0.052)
+    assert res_crit["urgency_tier"] == "CRITICAL_ELECTROPHYSIOLOGY"
+    assert res_crit["active_flag_count"] == 3
+    assert len(res_crit["clinical_findings"]) >= 3
+
 

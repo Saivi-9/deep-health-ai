@@ -138,4 +138,23 @@ def test_clinical_biomarker_audit_endpoint():
     assert len(data["engineered_biomarkers"]) == 9
 
 
+def test_ecg_clinical_summary_endpoint():
+    signal = (np.sin(np.linspace(0, 4 * np.pi, 256))).tolist()
+    response = client.post(
+        "/v1/ecg/clinical-summary",
+        json={"signal": signal, "sampling_rate_hz": 250, "threshold_override": 0.015},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["urgency_tier"] in (
+        "CRITICAL_ELECTROPHYSIOLOGY",
+        "ELEVATED_CONDUCTION_RISK",
+        "ROUTINE_SINUS_MONITORING",
+    )
+    assert isinstance(data["clinical_findings"], list)
+    assert len(data["clinical_findings"]) >= 1
+    assert "telemetry" in data
+
+
+
 
