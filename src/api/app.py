@@ -30,7 +30,7 @@ from src.vision.uncertainty import MonteCarloDropoutEstimator
 from src.vision.radiology_tools import compute_consolidation_severity, extract_radiomic_features
 from src.ecg.model import Conv1dAutoencoder, ECGResNet1D
 from src.ecg.anomaly_detector import ECGAnomalyDetector
-from src.ecg.telemetry import analyze_ecg_telemetry
+from src.ecg.telemetry import analyze_ecg_telemetry, summarize_ecg_clinical_risk
 from src.clinical.features import (
     engineer_clinical_features,
     compute_multimodal_triage_score,
@@ -689,6 +689,37 @@ def audit_clinical_biomarkers(payload: ClinicalTriageRequest):
     result = audit_patient_biomarkers(payload.model_dump())
     result["timestamp"] = datetime.now(timezone.utc).isoformat()
     return result
+
+
+@app.post("/v1/ecg/clinical-summary", tags=["Electrophysiological Screening"])
+def ecg_clinical_risk_summary(payload: ECGScreenRequest):
+    """Computes 18-biomarker ECG telemetry and returns a stratified electrophysiological urgency summary."""
+    raw_signal = np.array(payload.signal, dtype=np.float32)
+    if len(raw_signal) < 32:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ECG signal too short. Minimum 32 samples required.",
+        )
+
+    if len(raw_signal) > 256:
+        processed_signal = raw_signal[:256]
+    elif len(raw_signal) < 256:
+        processed_signal = np.pad(raw_signal, (0, 256 - len(raw_signal)), mode="edge")
+    else:
+        processed_signal = raw_signal
+
+    detector = get_ecg_detector()
+    detector.threshold = payload.threshold_override if payload.threshold_override is not None else _default_ecg_threshold
+    res = detector.predict(processed_signal)
+    telemetry_data = analyze_ecg_telemetry(processed_signal, sampling_rate=payload.sampling_rate_hz)
+    risk_summary = summarize_ecg_clinical_risk(
+        telemetry=telemetry_data,
+        is_anomaly=bool(res["is_anomaly"]),
+        reconstruction_mse=float(res["reconstruction_error"]),
+    )
+    risk_summary["telemetry"] = telemetry_data
+    risk_summary["timestamp"] = datetime.now(timezone.utc).isoformat()
+    return risk_summary
 
 
 
