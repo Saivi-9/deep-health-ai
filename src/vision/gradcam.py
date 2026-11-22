@@ -13,9 +13,16 @@ from typing import Tuple, Optional, Dict, Any
 import numpy as np
 from PIL import Image
 import matplotlib
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+try:
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    _BaseModule = nn.Module
+except ImportError:  # pragma: no cover - allow pure NumPy/PIL/Matplotlib encode_gradcam_artifacts without torch
+    torch = None
+    nn = None
+    F = None
+    _BaseModule = object
 
 
 class GradCAM:
@@ -23,7 +30,7 @@ class GradCAM:
     Grad-CAM implementation for PyTorch vision architectures.
     """
 
-    def __init__(self, model: nn.Module, target_layer: nn.Module):
+    def __init__(self, model: _BaseModule, target_layer: _BaseModule):
         self.model = model
         self.target_layer = target_layer
         self.gradients: Optional[torch.Tensor] = None
@@ -42,7 +49,7 @@ class GradCAM:
 
     def generate_heatmap(
         self,
-        input_tensor: torch.Tensor,
+        input_tensor: Any,
         target_class: Optional[int] = None
     ) -> Tuple[np.ndarray, int, float]:
         """
