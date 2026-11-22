@@ -35,6 +35,7 @@ from src.clinical.features import (
     engineer_clinical_features,
     compute_multimodal_triage_score,
     audit_patient_biomarkers,
+    compute_hemodynamic_shock_index,
     RAW_CLINICAL_FEATURES,
 )
 from src.pretrained_hub import (
@@ -687,6 +688,14 @@ def get_clinical_biomarker_reference():
 def audit_clinical_biomarkers(payload: ClinicalTriageRequest):
     """Audits an individual patient EHR profile against cardiology thresholds and flags out-of-range biomarkers."""
     result = audit_patient_biomarkers(payload.model_dump())
+    result["timestamp"] = datetime.now(timezone.utc).isoformat()
+    return result
+
+
+@app.post("/v1/clinical/hemodynamic-index", tags=["Cardiology EHR Triage"])
+def evaluate_hemodynamic_index(payload: ClinicalTriageRequest):
+    """Computes Shock Index, Age-Adjusted Shock Index, and Rate-Pressure Product myocardial demand telemetry."""
+    result = compute_hemodynamic_shock_index(payload.model_dump())
     result["timestamp"] = datetime.now(timezone.utc).isoformat()
     return result
 

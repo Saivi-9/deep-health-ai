@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from src.ecg.telemetry import analyze_ecg_telemetry, summarize_ecg_clinical_risk
 from src.vision.radiology_tools import apply_radiology_window, compute_consolidation_severity
-from src.clinical.features import audit_patient_biomarkers
+from src.clinical.features import audit_patient_biomarkers, compute_hemodynamic_shock_index
 
 
 def test_ecg_telemetry_fields():
@@ -82,6 +82,12 @@ def test_audit_patient_biomarkers():
     res_crit = audit_patient_biomarkers(critical)
     assert res_crit["overall_audit_status"] == "CRITICAL_FINDINGS"
     assert res_crit["abnormal_biomarker_count"] >= 5
+    assert "hemodynamic_indices" in res_crit
+
+    hemo = compute_hemodynamic_shock_index({"age": 68, "resting_bp": 160, "max_hr": 150})
+    assert hemo["rate_pressure_product_k"] == 24.0
+    assert hemo["hemodynamic_stability"] == "CRITICAL_MYOCARDIAL_DEMAND"
+
 
 
 def test_summarize_ecg_clinical_risk_tiers():

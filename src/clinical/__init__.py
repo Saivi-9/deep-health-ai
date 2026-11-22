@@ -6,6 +6,7 @@ from .features import (
     engineer_clinical_features,
     compute_multimodal_triage_score,
     audit_patient_biomarkers,
+    compute_hemodynamic_shock_index,
 )
 try:
     from .trainer import train_clinical_triage_suite
@@ -18,5 +19,6 @@ __all__ = [
     "engineer_clinical_features",
     "compute_multimodal_triage_score",
     "audit_patient_biomarkers",
+    "compute_hemodynamic_shock_index",
     "train_clinical_triage_suite",
 ]

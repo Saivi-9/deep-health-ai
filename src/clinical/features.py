@@ -252,5 +252,35 @@ def audit_patient_biomarkers(patient: Dict[str, Any]) -> Dict[str, Any]:
         "abnormal_biomarker_count": len(flags),
         "flagged_biomarkers": flags,
         "engineered_biomarkers": engineered,
+        "hemodynamic_indices": compute_hemodynamic_shock_index(patient),
     }
+
+
+def compute_hemodynamic_shock_index(patient: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Computes Shock Index (HR / SBP), Age-Adjusted Shock Index (Age * SI),
+    and Rate-Pressure Product (SBP * HR / 1000) to quantify myocardial oxygen demand.
+    """
+    age = float(patient.get("age", 50) or 50)
+    resting_bp = max(float(patient.get("resting_bp", 120) or 120), 1.0)
+    max_hr = float(patient.get("max_hr", 150) or 150)
+
+    shock_index = round(max_hr / resting_bp, 4)
+    age_shock_index = round(age * shock_index, 2)
+    rpp = round((resting_bp * max_hr) / 1000.0, 2)
+
+    if rpp >= 22.0 or age_shock_index >= 75.0:
+        stability = "CRITICAL_MYOCARDIAL_DEMAND"
+    elif rpp >= 18.0 or age_shock_index >= 55.0:
+        stability = "ELEVATED_HEMODYNAMIC_STRESS"
+    else:
+        stability = "HEMODYNAMICALLY_STABLE"
+
+    return {
+        "shock_index": shock_index,
+        "age_adjusted_shock_index": age_shock_index,
+        "rate_pressure_product_k": rpp,
+        "hemodynamic_stability": stability,
+    }
+
 
