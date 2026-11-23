@@ -49,6 +49,7 @@ from src.clinical.features import (
     compute_multimodal_triage_score,
     audit_patient_biomarkers,
     compute_hemodynamic_shock_index,
+    compute_cardiovascular_risk_profile,
     RAW_CLINICAL_FEATURES,
 )
 from src.pretrained_hub import (
@@ -772,6 +773,15 @@ def evaluate_hemodynamic_index(payload: ClinicalTriageRequest):
     result = compute_hemodynamic_shock_index(payload.model_dump())
     result["timestamp"] = datetime.now(timezone.utc).isoformat()
     return result
+
+
+@app.post("/v1/clinical/cardiovascular-profile", tags=["Cardiology EHR Triage"])
+def evaluate_cardiovascular_profile(payload: ClinicalTriageRequest):
+    """Computes estimated vascular age acceleration, chronotropic reserve, and secondary prevention recommendations."""
+    result = compute_cardiovascular_risk_profile(payload.model_dump())
+    result["timestamp"] = datetime.now(timezone.utc).isoformat()
+    return result
+
 
 
 @app.post("/v1/ecg/clinical-summary", tags=["Electrophysiological Screening"])

@@ -156,5 +156,32 @@ def test_ecg_clinical_summary_endpoint():
     assert "telemetry" in data
 
 
+def test_clinical_cardiovascular_profile_endpoint():
+    payload = {
+        "age": 58,
+        "sex": 1,
+        "chest_pain_type": 2,
+        "resting_bp": 158,
+        "cholesterol": 255,
+        "fasting_bs": 1,
+        "resting_ecg": 1,
+        "max_hr": 124,
+        "exercise_angina": 1,
+        "oldpeak": 2.2,
+        "st_slope": 2,
+        "ca": 2,
+        "thal": 3,
+    }
+    response = client.post("/v1/clinical/cardiovascular-profile", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["chronological_age"] == 58
+    assert data["estimated_vascular_age"] > 58.0
+    assert data["vascular_age_acceleration_years"] >= 15.0
+    assert data["risk_category"] == "VERY_HIGH_CARDIOVASCULAR_RISK"
+    assert len(data["preventive_recommendations"]) >= 3
+
+
+
 
 

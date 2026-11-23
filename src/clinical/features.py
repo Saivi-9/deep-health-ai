@@ -284,3 +284,59 @@ def compute_hemodynamic_shock_index(patient: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def compute_cardiovascular_risk_profile(patient: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Computes an integrated cardiovascular risk stratification profile including
+    estimated vascular age, atherogenic metabolic burden, myocardial ischemic burden,
+    and actionable secondary-prevention targets.
+    """
+    age = float(patient.get("age", 50) or 50)
+    resting_bp = float(patient.get("resting_bp", 120) or 120)
+    cholesterol = float(patient.get("cholesterol", 190) or 190)
+    fasting_bs = int(patient.get("fasting_bs", 0) or 0)
+    max_hr = float(patient.get("max_hr", 150) or 150)
+    oldpeak = float(patient.get("oldpeak", 0.0) or 0.0)
+    ca = int(patient.get("ca", 0) or 0)
+    exercise_angina = int(patient.get("exercise_angina", 0) or 0)
+
+    bp_penalty = max(0.0, (resting_bp - 120.0) * 0.25)
+    lipid_penalty = max(0.0, (cholesterol - 200.0) * 0.12)
+    glycemic_penalty = 4.5 if fasting_bs == 1 else 0.0
+    ischemic_penalty = oldpeak * 3.0 + ca * 4.0 + (3.5 if exercise_angina == 1 else 0.0)
+
+    estimated_vascular_age = round(age + bp_penalty + lipid_penalty + glycemic_penalty + ischemic_penalty, 1)
+    vascular_age_delta = round(estimated_vascular_age - age, 1)
+
+    predicted_max_hr = max(220.0 - age, 100.0)
+    chronotropic_reserve_pct = round((max_hr / predicted_max_hr) * 100.0, 1)
+
+    recommendations: List[str] = []
+    if resting_bp >= 130:
+        recommendations.append("Titrate antihypertensive regimen toward < 120/80 mmHg systolic target.")
+    if cholesterol >= 200:
+        recommendations.append("Evaluate high-intensity statin therapy and lipid panel fractionation.")
+    if fasting_bs == 1:
+        recommendations.append("Order HbA1c and initiate glycemic control protocol.")
+    if oldpeak >= 1.0 or exercise_angina == 1 or ca >= 1:
+        recommendations.append("Schedule stress myocardial perfusion imaging or coronary CT angiography.")
+    if not recommendations:
+        recommendations.append("Maintain preventive aerobic conditioning and annual lipid/BP surveillance.")
+
+    if vascular_age_delta >= 15.0 or ca >= 2 or oldpeak >= 2.0:
+        risk_category = "VERY_HIGH_CARDIOVASCULAR_RISK"
+    elif vascular_age_delta >= 7.0 or resting_bp >= 140 or cholesterol >= 240:
+        risk_category = "ELEVATED_CARDIOVASCULAR_RISK"
+    else:
+        risk_category = "LOW_TO_MODERATE_RISK"
+
+    return {
+        "chronological_age": int(round(age)),
+        "estimated_vascular_age": estimated_vascular_age,
+        "vascular_age_acceleration_years": vascular_age_delta,
+        "chronotropic_reserve_pct": chronotropic_reserve_pct,
+        "risk_category": risk_category,
+        "preventive_recommendations": recommendations,
+    }
+
+
+
