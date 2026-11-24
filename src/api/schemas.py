@@ -123,6 +123,8 @@ class ClinicalTriageRequest(BaseModel):
     exercise_angina: int = Field(0, ge=0, le=1)
     oldpeak: float = Field(0.8, ge=-2.5, le=8.0)
     st_slope: int = Field(2, ge=1, le=3)
+    ca: int = Field(0, ge=0, le=4)
+    thal: int = Field(2, ge=0, le=3)
     cxr_pneumonia_probability: Optional[float] = Field(None, ge=0.0, le=1.0)
     ecg_is_anomaly: Optional[bool] = None
     ecg_reconstruction_mse: Optional[float] = None

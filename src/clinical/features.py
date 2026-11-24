@@ -339,4 +339,53 @@ def compute_cardiovascular_risk_profile(patient: Dict[str, Any]) -> Dict[str, An
     }
 
 
+def compute_coronary_ischemic_burden(patient: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Computes an integrated coronary ischemic burden score and Duke Treadmill Score
+    approximation from exercise ST depression (oldpeak), ST slope, exercise angina,
+    fluoroscopic coronary vessel involvement (ca), and chest pain acuity.
+    """
+    oldpeak = max(0.0, float(patient.get("oldpeak", 0.0) or 0.0))
+    st_slope = int(patient.get("st_slope", 1) or 1)
+    exercise_angina = int(patient.get("exercise_angina", 0) or 0)
+    ca = max(0, int(patient.get("ca", 0) or 0))
+    chest_pain_type = int(patient.get("chest_pain_type", 0) or 0)
+    max_hr = float(patient.get("max_hr", 150) or 150)
+
+    # Approximate exercise tolerance duration (minutes) from peak HR and angina status
+    estimated_exercise_minutes = round(max(3.0, min(12.0, (max_hr - 90.0) / 10.0 - (1.5 if exercise_angina == 1 else 0.0))), 2)
+    angina_index = 2 if (exercise_angina == 1 and oldpeak >= 1.5) else (1 if exercise_angina == 1 else 0)
+    duke_treadmill_score = round(estimated_exercise_minutes - (5.0 * oldpeak) - (4.0 * angina_index), 2)
+
+    slope_weight = 1.4 if st_slope >= 2 else (1.15 if st_slope == 1 else 0.85)
+    ischemic_burden_index = round(
+        oldpeak * 2.5 * slope_weight
+        + ca * 3.0
+        + (2.5 if exercise_angina == 1 else 0.0)
+        + (1.2 if chest_pain_type >= 2 else 0.0),
+        2,
+    )
+
+    if duke_treadmill_score <= -11.0 or ischemic_burden_index >= 10.0 or ca >= 2:
+        severity_tier = "SEVERE_MYOCARDIAL_ISCHEMIA"
+        workup = "Urgent invasive coronary angiography or stress myocardial perfusion imaging."
+    elif duke_treadmill_score < 5.0 or ischemic_burden_index >= 4.5 or ca == 1:
+        severity_tier = "MODERATE_ISCHEMIC_BURDEN"
+        workup = "Coronary CT angiography (CCTA) and anti-ischemic beta-blocker/statin optimization."
+    else:
+        severity_tier = "LOW_ISCHEMIC_RISK"
+        workup = "Routine outpatient cardiology follow-up and primary lifestyle prevention."
+
+    return {
+        "duke_treadmill_score": duke_treadmill_score,
+        "estimated_exercise_minutes": estimated_exercise_minutes,
+        "angina_index": angina_index,
+        "ischemic_burden_index": ischemic_burden_index,
+        "fluoroscopic_vessels_involved": ca,
+        "ischemia_severity_tier": severity_tier,
+        "recommended_workup": workup,
+    }
+
+
+
 
