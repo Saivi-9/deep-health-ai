@@ -182,6 +182,33 @@ def test_clinical_cardiovascular_profile_endpoint():
     assert len(data["preventive_recommendations"]) >= 3
 
 
+def test_clinical_ischemic_burden_endpoint():
+    payload = {
+        "age": 62,
+        "sex": 1,
+        "chest_pain_type": 3,
+        "resting_bp": 152,
+        "cholesterol": 248,
+        "fasting_bs": 1,
+        "resting_ecg": 1,
+        "max_hr": 118,
+        "exercise_angina": 1,
+        "oldpeak": 2.4,
+        "st_slope": 2,
+        "ca": 2,
+        "thal": 3,
+    }
+    response = client.post("/v1/clinical/ischemic-burden", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["duke_treadmill_score"] <= -11.0
+    assert data["ischemic_burden_index"] >= 10.0
+    assert data["fluoroscopic_vessels_involved"] == 2
+    assert data["ischemia_severity_tier"] == "SEVERE_MYOCARDIAL_ISCHEMIA"
+    assert "coronary angiography" in data["recommended_workup"]
+
+
+
 
 
 

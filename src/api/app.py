@@ -50,6 +50,7 @@ from src.clinical.features import (
     audit_patient_biomarkers,
     compute_hemodynamic_shock_index,
     compute_cardiovascular_risk_profile,
+    compute_coronary_ischemic_burden,
     RAW_CLINICAL_FEATURES,
 )
 from src.pretrained_hub import (
@@ -779,6 +780,14 @@ def evaluate_hemodynamic_index(payload: ClinicalTriageRequest):
 def evaluate_cardiovascular_profile(payload: ClinicalTriageRequest):
     """Computes estimated vascular age acceleration, chronotropic reserve, and secondary prevention recommendations."""
     result = compute_cardiovascular_risk_profile(payload.model_dump())
+    result["timestamp"] = datetime.now(timezone.utc).isoformat()
+    return result
+
+
+@app.post("/v1/clinical/ischemic-burden", tags=["Cardiology EHR Triage"])
+def evaluate_coronary_ischemic_burden(payload: ClinicalTriageRequest):
+    """Computes Duke Treadmill Score approximation, coronary ischemic burden index, and workup stratification."""
+    result = compute_coronary_ischemic_burden(payload.model_dump())
     result["timestamp"] = datetime.now(timezone.utc).isoformat()
     return result
 
