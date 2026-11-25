@@ -51,6 +51,7 @@ from src.clinical.features import (
     compute_hemodynamic_shock_index,
     compute_cardiovascular_risk_profile,
     compute_coronary_ischemic_burden,
+    compute_cardiometabolic_syndrome_index,
     RAW_CLINICAL_FEATURES,
 )
 from src.pretrained_hub import (
@@ -788,6 +789,14 @@ def evaluate_cardiovascular_profile(payload: ClinicalTriageRequest):
 def evaluate_coronary_ischemic_burden(payload: ClinicalTriageRequest):
     """Computes Duke Treadmill Score approximation, coronary ischemic burden index, and workup stratification."""
     result = compute_coronary_ischemic_burden(payload.model_dump())
+    result["timestamp"] = datetime.now(timezone.utc).isoformat()
+    return result
+
+
+@app.post("/v1/clinical/cardiometabolic-index", tags=["Cardiology EHR Triage"])
+def evaluate_cardiometabolic_syndrome_index(payload: ClinicalTriageRequest):
+    """Computes cardiometabolic syndrome risk factors, atherogenic ratio estimate, and metabolic guidance."""
+    result = compute_cardiometabolic_syndrome_index(payload.model_dump())
     result["timestamp"] = datetime.now(timezone.utc).isoformat()
     return result
 

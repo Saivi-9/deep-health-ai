@@ -208,6 +208,33 @@ def test_clinical_ischemic_burden_endpoint():
     assert "coronary angiography" in data["recommended_workup"]
 
 
+def test_clinical_cardiometabolic_index_endpoint():
+    payload = {
+        "age": 60,
+        "sex": 1,
+        "chest_pain_type": 2,
+        "resting_bp": 156,
+        "cholesterol": 262,
+        "fasting_bs": 1,
+        "resting_ecg": 1,
+        "max_hr": 122,
+        "exercise_angina": 1,
+        "oldpeak": 1.8,
+        "st_slope": 2,
+        "ca": 1,
+        "thal": 3,
+    }
+    response = client.post("/v1/clinical/cardiometabolic-index", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["metabolic_risk_factors_count"] == 4
+    assert data["atherogenic_lipid_ratio_est"] > 5.0
+    assert data["cardiometabolic_index_score"] >= 7.5
+    assert data["syndrome_tier"] == "HIGH_CARDIOMETABOLIC_RISK"
+    assert "lipid-lowering" in data["clinical_guidance"]
+
+
+
 
 
 
