@@ -387,5 +387,54 @@ def compute_coronary_ischemic_burden(patient: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def compute_cardiometabolic_syndrome_index(patient: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Computes a cardiometabolic syndrome risk index from systolic blood pressure,
+    total cholesterol, fasting glycemic status, age, and coronary reserve markers.
+    """
+    age = float(patient.get("age", 50) or 50)
+    resting_bp = float(patient.get("resting_bp", 120) or 120)
+    cholesterol = float(patient.get("cholesterol", 190) or 190)
+    fasting_bs = int(patient.get("fasting_bs", 0) or 0)
+    max_hr = float(patient.get("max_hr", 150) or 150)
+
+    risk_factors = 0
+    if resting_bp >= 130.0:
+        risk_factors += 1
+    if cholesterol >= 200.0:
+        risk_factors += 1
+    if fasting_bs == 1:
+        risk_factors += 1
+    if max_hr < 130.0:
+        risk_factors += 1
+
+    atherogenic_ratio_est = round(cholesterol / 45.0, 2)
+    bp_excess = max(0.0, (resting_bp - 120.0) / 10.0)
+    chol_excess = max(0.0, (cholesterol - 180.0) / 25.0)
+    glycemic_weight = 2.5 if fasting_bs == 1 else 0.0
+    age_weight = max(0.0, (age - 45.0) / 15.0)
+
+    cardiometabolic_score = round(bp_excess * 1.4 + chol_excess * 1.3 + glycemic_weight + age_weight, 2)
+
+    if risk_factors >= 3 or cardiometabolic_score >= 7.5:
+        syndrome_tier = "HIGH_CARDIOMETABOLIC_RISK"
+        guidance = "Initiate intensive lipid-lowering, antihypertensive, and glycemic management protocol."
+    elif risk_factors == 2 or cardiometabolic_score >= 4.0:
+        syndrome_tier = "MODERATE_METABOLIC_STRAIN"
+        guidance = "Recommend structured metabolic lifestyle intervention and quarterly lipid/HbA1c monitoring."
+    else:
+        syndrome_tier = "OPTIMAL_METABOLIC_PROFILE"
+        guidance = "Maintain current preventive nutrition and annual cardiovascular screening."
+
+    return {
+        "metabolic_risk_factors_count": risk_factors,
+        "atherogenic_lipid_ratio_est": atherogenic_ratio_est,
+        "cardiometabolic_index_score": cardiometabolic_score,
+        "syndrome_tier": syndrome_tier,
+        "clinical_guidance": guidance,
+    }
+
+
+
 
 
