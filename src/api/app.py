@@ -52,6 +52,7 @@ from src.clinical.features import (
     compute_cardiovascular_risk_profile,
     compute_coronary_ischemic_burden,
     compute_cardiometabolic_syndrome_index,
+    compute_chronotropic_reserve_profile,
     RAW_CLINICAL_FEATURES,
 )
 from src.pretrained_hub import (
@@ -797,6 +798,14 @@ def evaluate_coronary_ischemic_burden(payload: ClinicalTriageRequest):
 def evaluate_cardiometabolic_syndrome_index(payload: ClinicalTriageRequest):
     """Computes cardiometabolic syndrome risk factors, atherogenic ratio estimate, and metabolic guidance."""
     result = compute_cardiometabolic_syndrome_index(payload.model_dump())
+    result["timestamp"] = datetime.now(timezone.utc).isoformat()
+    return result
+
+
+@app.post("/v1/clinical/chronotropic-reserve", tags=["Cardiology EHR Triage"])
+def evaluate_chronotropic_reserve(payload: ClinicalTriageRequest):
+    """Quantifies exercise heart rate reserve utilization, chronotropic competence status, and ischemic co-limitation."""
+    result = compute_chronotropic_reserve_profile(payload.model_dump())
     result["timestamp"] = datetime.now(timezone.utc).isoformat()
     return result
 
