@@ -234,6 +234,33 @@ def test_clinical_cardiometabolic_index_endpoint():
     assert "lipid-lowering" in data["clinical_guidance"]
 
 
+def test_clinical_chronotropic_reserve_endpoint():
+    payload = {
+        "age": 60,
+        "sex": 1,
+        "chest_pain_type": 3,
+        "resting_bp": 148,
+        "cholesterol": 240,
+        "fasting_bs": 0,
+        "resting_ecg": 1,
+        "max_hr": 112,
+        "exercise_angina": 1,
+        "oldpeak": 2.0,
+        "st_slope": 2,
+        "ca": 1,
+        "thal": 3,
+    }
+    response = client.post("/v1/clinical/chronotropic-reserve", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["age_predicted_max_hr_bpm"] == 160.0
+    assert data["pct_predicted_max_hr"] == 70.0
+    assert data["chronotropic_incompetence"] is True
+    assert data["ischemic_co_limitation"] is True
+    assert data["chronotropic_status"] == "SEVERE_CHRONOTROPIC_INCOMPETENCE"
+
+
+
 
 
 

@@ -435,6 +435,48 @@ def compute_cardiometabolic_syndrome_index(patient: Dict[str, Any]) -> Dict[str,
     }
 
 
+def compute_chronotropic_reserve_profile(patient: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Quantifies autonomic chronotropic response during exercise stress testing:
+    age-predicted peak HR (220 - age), achieved % of predicted peak HR,
+    heart rate reserve utilization index, and chronotropic competence status.
+    """
+    age = max(18.0, float(patient.get("age", 50) or 50))
+    max_hr = float(patient.get("max_hr", 150) or 150)
+    exercise_angina = int(patient.get("exercise_angina", 0) or 0)
+    oldpeak = max(0.0, float(patient.get("oldpeak", 0.0) or 0.0))
+
+    predicted_peak_hr = round(max(100.0, 220.0 - age), 1)
+    resting_hr_baseline = 72.0
+    available_reserve = max(20.0, predicted_peak_hr - resting_hr_baseline)
+    achieved_reserve = max(0.0, max_hr - resting_hr_baseline)
+
+    peak_hr_pct = round((max_hr / predicted_peak_hr) * 100.0, 1)
+    chronotropic_index = round(achieved_reserve / available_reserve, 3)
+
+    if chronotropic_index < 0.62 or peak_hr_pct < 75.0:
+        status = "SEVERE_CHRONOTROPIC_INCOMPETENCE"
+        interpretation = "Markedly blunted heart rate response (<62% HR reserve); evaluate sinoatrial node dysfunction or ischemic limitation."
+    elif chronotropic_index < 0.80 or peak_hr_pct < 85.0:
+        status = "BORDERLINE_CHRONOTROPIC_RESERVE"
+        interpretation = "Suboptimal chronotropic reserve (<80% HR reserve); correlate with beta-blocker therapy and stress perfusion."
+    else:
+        status = "NORMAL_CHRONOTROPIC_COMPETENCE"
+        interpretation = "Adequate autonomic heart rate acceleration and chronotropic reserve."
+
+    return {
+        "age_predicted_max_hr_bpm": predicted_peak_hr,
+        "achieved_max_hr_bpm": round(max_hr, 1),
+        "pct_predicted_max_hr": peak_hr_pct,
+        "chronotropic_reserve_index": chronotropic_index,
+        "chronotropic_incompetence": bool(chronotropic_index < 0.80),
+        "ischemic_co_limitation": bool(exercise_angina == 1 or oldpeak >= 1.5),
+        "chronotropic_status": status,
+        "clinical_interpretation": interpretation,
+    }
+
+
+
 
 
 
