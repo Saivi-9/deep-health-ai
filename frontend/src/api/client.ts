@@ -7,6 +7,10 @@ import type {
   ClinicalTriageResponse,
   PretrainedCatalogEntry,
   HFSearchResult,
+  ECGRiskSummaryResponse,
+  CardiovascularProfileResponse,
+  VascularStiffnessResponse,
+  BiomarkerAuditResponse,
 } from '../types';
 
 const API_BASE_URL = window.location.port === '5173' ? 'http://localhost:8000' : '';
@@ -158,3 +162,52 @@ export async function inferPretrainedClinical(payload: ClinicalFeaturesInput): P
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return await res.json();
 }
+
+export async function fetchECGClinicalSummary(
+  signal: number[],
+  samplingRate: number = 250,
+  thresholdOverride?: number
+): Promise<ECGRiskSummaryResponse> {
+  const res = await fetch(`${API_BASE_URL}/v1/ecg/clinical-summary`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      signal,
+      sampling_rate_hz: samplingRate,
+      threshold_override: thresholdOverride,
+    }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+
+export async function fetchCardiovascularProfile(payload: ClinicalFeaturesInput): Promise<CardiovascularProfileResponse> {
+  const res = await fetch(`${API_BASE_URL}/v1/clinical/cardiovascular-profile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+
+export async function fetchVascularStiffness(payload: ClinicalFeaturesInput): Promise<VascularStiffnessResponse> {
+  const res = await fetch(`${API_BASE_URL}/v1/clinical/vascular-stiffness`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+
+export async function fetchBiomarkerAudit(payload: ClinicalFeaturesInput): Promise<BiomarkerAuditResponse> {
+  const res = await fetch(`${API_BASE_URL}/v1/clinical/biomarker-audit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+
