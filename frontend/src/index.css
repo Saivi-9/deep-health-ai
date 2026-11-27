@@ -2,29 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root,
+[data-theme="ocean"] {
   color-scheme: dark;
-  --bg-primary: #070B14;
-  --bg-panel: #0F172A;
-  --bg-card: #152033;
-  --border-color: #1E293B;
-  --accent-cyan: #38BDF8;
-  --accent-contrast: #06121E;
-  --scrollbar-thumb: #334155;
-  --scrollbar-track: #0B1120;
+  --pacs-950: #061320;
+  --pacs-900: #0B1D30;
+  --pacs-850: #0F253C;
+  --pacs-800: #15304B;
+  --pacs-700: #1E4164;
+  --pacs-600: #2C5882;
+  --pacs-500: #4A78A3;
+  --pacs-400: #78A1C4;
+  --pacs-300: #A5C4DF;
+  --pacs-200: #D1E3F3;
+  --pacs-100: #F0F7FF;
+  --bg-mesh:
+    radial-gradient(at 12% 10%, rgba(20, 184, 166, 0.16) 0px, transparent 50%),
+    radial-gradient(at 88% 12%, rgba(56, 189, 248, 0.16) 0px, transparent 50%),
+    radial-gradient(at 50% 90%, rgba(99, 102, 241, 0.12) 0px, transparent 55%),
+    linear-gradient(180deg, #061320 0%, #091A2C 100%);
+  --accent-cyan: #22D3EE;
+  --scrollbar-thumb: #2C5882;
+  --scrollbar-track: #061320;
+  accent-color: #14B8A6;
+}
 
-  accent-color: var(--accent-cyan);
+[data-theme="indigo"] {
+  color-scheme: dark;
+  --pacs-950: #0D0F22;
+  --pacs-900: #141833;
+  --pacs-850: #1B2042;
+  --pacs-800: #222952;
+  --pacs-700: #30396E;
+  --pacs-600: #435094;
+  --pacs-500: #6370B5;
+  --pacs-400: #8D98D1;
+  --pacs-300: #B7C0E8;
+  --pacs-200: #DCE1F7;
+  --pacs-100: #F4F6FF;
+  --bg-mesh:
+    radial-gradient(at 15% 15%, rgba(139, 92, 246, 0.18) 0px, transparent 50%),
+    radial-gradient(at 85% 10%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
+    radial-gradient(at 50% 85%, rgba(244, 63, 94, 0.10) 0px, transparent 55%),
+    linear-gradient(180deg, #0D0F22 0%, #121631 100%);
+  --accent-cyan: #38BDF8;
+  --scrollbar-thumb: #435094;
+  --scrollbar-track: #0D0F22;
+  accent-color: #8B5CF6;
+}
+
+[data-theme="daylight"] {
+  color-scheme: light;
+  --pacs-950: #EEF5FC;
+  --pacs-900: #FFFFFF;
+  --pacs-850: #F7FAFF;
+  --pacs-800: #E3EFFA;
+  --pacs-700: #C8DDF0;
+  --pacs-600: #9BBCE0;
+  --pacs-500: #5E7E9E;
+  --pacs-400: #415C78;
+  --pacs-300: #28415C;
+  --pacs-200: #152A42;
+  --pacs-100: #0A192B;
+  --bg-mesh:
+    radial-gradient(at 10% 8%, rgba(14, 165, 233, 0.12) 0px, transparent 48%),
+    radial-gradient(at 90% 10%, rgba(20, 184, 166, 0.12) 0px, transparent 48%),
+    radial-gradient(at 50% 92%, rgba(99, 102, 241, 0.08) 0px, transparent 55%),
+    linear-gradient(180deg, #EEF5FC 0%, #E5F0FA 100%);
+  --accent-cyan: #0284C7;
+  --scrollbar-thumb: #9BBCE0;
+  --scrollbar-track: #EEF5FC;
+  accent-color: #0284C7;
+}
+
+/* Automatic high-contrast text harmonization in Daylight theme */
+[data-theme="daylight"] .text-white {
+  color: #0B192C !important;
+}
+[data-theme="daylight"] .text-slate-100,
+[data-theme="daylight"] .text-slate-200 {
+  color: #162B44 !important;
+}
+[data-theme="daylight"] .text-slate-300,
+[data-theme="daylight"] .text-slate-400 {
+  color: #3B5572 !important;
+}
+[data-theme="daylight"] .text-amber-300 {
+  color: #B45309 !important;
+}
+[data-theme="daylight"] .text-clinical-cyan {
+  color: #0284C7 !important;
+}
+[data-theme="daylight"] .text-clinical-teal {
+  color: #0F766E !important;
+}
+[data-theme="daylight"] .text-clinical-green {
+  color: #047857 !important;
+}
+[data-theme="daylight"] .text-clinical-rose {
+  color: #BE123C !important;
 }
 
 body {
   margin: 0;
-  background-color: var(--bg-primary);
-  color: #E2E8F0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--pacs-950);
+  background-image: var(--bg-mesh);
+  background-attachment: fixed;
+  color: var(--pacs-100);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 @supports not (scrollbar-color: auto) {
@@ -41,50 +131,24 @@ body {
   }
 }
 
-/* Brand-Consistent Form Controls with graceful pre-accent fallback */
-@supports not (accent-color: #38BDF8) {
-  input[type="checkbox"],
-  input[type="radio"] {
-    appearance: none;
-    width: 1rem;
-    height: 1rem;
-    border: 1.5px solid #475569;
-    border-radius: 0.25rem;
-    background: #0B1120;
-    display: inline-grid;
-    place-content: center;
-  }
-  input[type="checkbox"]:checked,
-  input[type="radio"]:checked {
-    background-color: var(--accent-cyan);
-    border-color: var(--accent-cyan);
-  }
-  input[type="range"] {
-    appearance: none;
-    height: 6px;
-    border-radius: 999px;
-    background: #1E293B;
-  }
-}
-
 /* Native <dialog> Modal Top-Layer Styling & Overscroll Containment */
 dialog.pacs-dialog {
-  border: 1px solid #334155;
-  border-radius: 1rem;
-  background: #0F172A;
-  color: #E2E8F0;
+  border: 1px solid var(--pacs-700);
+  border-radius: 1.25rem;
+  background: var(--pacs-900);
+  color: var(--pacs-100);
   padding: 0;
-  width: min(92vw, 48rem);
+  width: min(92vw, 52rem);
   max-height: 90dvh;
   margin: auto;
   overflow: hidden;
   overscroll-behavior: contain;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
 }
 
 dialog.pacs-dialog::backdrop {
-  background: rgba(2, 6, 23, 0.82);
-  backdrop-filter: blur(4px);
+  background: rgba(4, 12, 24, 0.78);
+  backdrop-filter: blur(6px);
   overscroll-behavior: contain;
 }
 
@@ -92,26 +156,27 @@ dialog.pacs-dialog::backdrop {
 [role="tablist"].pacs-tablist {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
 [role="tab"].pacs-tab {
   position: relative;
   border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [role="tab"].pacs-tab[aria-selected="true"]::after {
   content: '';
   position: absolute;
-  left: 0.65rem;
-  right: 0.65rem;
+  left: 0.75rem;
+  right: 0.75rem;
   bottom: 0;
-  height: 2px;
+  height: 2.5px;
   border-radius: 999px;
-  background: var(--accent-cyan);
+  background: linear-gradient(90deg, #14B8A6, #38BDF8);
 }
 
-/* Responsive Data Tables using Container Queries (no viewport overflow) */
+/* Responsive Data Tables using Container Queries */
 .table-wrapper {
   container-type: inline-size;
   overflow-x: auto;
@@ -134,7 +199,7 @@ dialog.pacs-dialog::backdrop {
     width: 100%;
   }
   .pacs-responsive-table tr {
-    border-bottom: 1px solid #1E293B;
+    border-bottom: 1px solid var(--pacs-700);
     padding: 0.65rem 0.75rem;
   }
   .pacs-responsive-table td {
@@ -149,7 +214,7 @@ dialog.pacs-dialog::backdrop {
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.65rem;
-    color: #94A3B8;
+    color: var(--pacs-400);
     margin-right: 0.75rem;
     text-align: left;
   }
@@ -158,6 +223,24 @@ dialog.pacs-dialog::backdrop {
 .pacs-grid {
   background-size: 24px 24px;
   background-image:
-    linear-gradient(to right, rgba(30, 41, 59, 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(30, 41, 59, 0.35) 1px, transparent 1px);
+    linear-gradient(to right, rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.08) 1px, transparent 1px);
 }
+
+/* Soft glass card elevation */
+.clinical-card {
+  background: var(--pacs-900);
+  border: 1px solid var(--pacs-700);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.22);
+}
+
+@keyframes pulse-gentle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+.animate-heartbeat {
+  animation: pulse-gentle 1.1s ease-in-out infinite;
+}
+

@@ -171,3 +171,48 @@ export interface HFSearchResult {
 }
 
 export type ActiveTab = 'radiology' | 'ecg' | 'clinical' | 'pretrained' | 'batch' | 'governance';
+export type ThemeMode = 'ocean' | 'daylight' | 'indigo';
+export type ExplainMode = 'simple' | 'pro';
+
+export interface ECGRiskSummaryResponse {
+  urgency_tier: 'CRITICAL_ELECTROPHYSIOLOGY' | 'ELEVATED_CONDUCTION_RISK' | 'ROUTINE_SINUS_MONITORING' | string;
+  active_flag_count: number;
+  is_anomaly: boolean;
+  reconstruction_mse: number;
+  clinical_findings: string[];
+  recommended_action: string;
+}
+
+export interface CardiovascularProfileResponse {
+  chronological_age: number;
+  estimated_vascular_age: number;
+  vascular_age_acceleration_years: number;
+  chronotropic_reserve_pct: number;
+  risk_category: string;
+  preventive_recommendations: string[];
+}
+
+export interface VascularStiffnessResponse {
+  resting_systolic_bp_mmhg: number;
+  estimated_diastolic_bp_mmhg: number;
+  estimated_pulse_pressure_mmhg: number;
+  mean_arterial_pressure_mmhg: number;
+  vascular_stiffness_index: number;
+  arterial_compliance_tier: string;
+  clinical_recommendation: string;
+}
+
+export interface BiomarkerAuditFlag {
+  feature: string;
+  value: number;
+  severity: 'CRITICAL' | 'ELEVATED' | 'BORDERLINE' | string;
+  finding: string;
+}
+
+export interface BiomarkerAuditResponse {
+  overall_audit_status: string;
+  abnormal_biomarker_count: number;
+  flagged_biomarkers: BiomarkerAuditFlag[];
+  engineered_biomarkers: Record<string, number>;
+}
+

@@ -9,25 +9,27 @@ export default {
     extend: {
       colors: {
         pacs: {
-          950: '#070B14',
-          900: '#0B1120',
-          850: '#0F172A',
-          800: '#152033',
-          700: '#1E293B',
-          600: '#334155',
-          500: '#475569',
-          400: '#64748B',
-          300: '#94A3B8',
-          200: '#CBD5E1',
-          100: '#E2E8F0',
+          950: 'var(--pacs-950)',
+          900: 'var(--pacs-900)',
+          850: 'var(--pacs-850)',
+          800: 'var(--pacs-800)',
+          700: 'var(--pacs-700)',
+          600: 'var(--pacs-600)',
+          500: 'var(--pacs-500)',
+          400: 'var(--pacs-400)',
+          300: 'var(--pacs-300)',
+          200: 'var(--pacs-200)',
+          100: 'var(--pacs-100)',
         },
         clinical: {
-          cyan: '#38BDF8',
-          teal: '#2DD4BF',
-          green: '#22C55E',
+          cyan: '#06B6D4',
+          sky: '#38BDF8',
+          teal: '#14B8A6',
+          green: '#10B981',
           amber: '#F59E0B',
           rose: '#F43F5E',
-          purple: '#A855F7',
+          purple: '#8B5CF6',
+          indigo: '#6366F1',
         }
       },
       fontFamily: {
@@ -38,3 +40,4 @@ export default {
   },
   plugins: [],
 }
+
