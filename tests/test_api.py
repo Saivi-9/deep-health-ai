@@ -260,6 +260,32 @@ def test_clinical_chronotropic_reserve_endpoint():
     assert data["chronotropic_status"] == "SEVERE_CHRONOTROPIC_INCOMPETENCE"
 
 
+def test_clinical_vascular_stiffness_endpoint():
+    payload = {
+        "age": 66,
+        "sex": 1,
+        "chest_pain_type": 3,
+        "resting_bp": 168,
+        "cholesterol": 255,
+        "fasting_bs": 1,
+        "resting_ecg": 1,
+        "max_hr": 118,
+        "exercise_angina": 1,
+        "oldpeak": 1.8,
+        "st_slope": 2,
+        "ca": 1,
+        "thal": 3,
+    }
+    response = client.post("/v1/clinical/vascular-stiffness", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["resting_systolic_bp_mmhg"] == 168.0
+    assert data["estimated_pulse_pressure_mmhg"] >= 60.0
+    assert data["mean_arterial_pressure_mmhg"] > 90.0
+    assert data["arterial_compliance_tier"] == "HIGH_ARTERIAL_STIFFNESS"
+
+
+
 
 
 
