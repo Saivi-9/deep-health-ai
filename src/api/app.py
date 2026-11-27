@@ -53,6 +53,7 @@ from src.clinical.features import (
     compute_coronary_ischemic_burden,
     compute_cardiometabolic_syndrome_index,
     compute_chronotropic_reserve_profile,
+    compute_pulse_pressure_stiffness_index,
     RAW_CLINICAL_FEATURES,
 )
 from src.pretrained_hub import (
@@ -808,6 +809,15 @@ def evaluate_chronotropic_reserve(payload: ClinicalTriageRequest):
     result = compute_chronotropic_reserve_profile(payload.model_dump())
     result["timestamp"] = datetime.now(timezone.utc).isoformat()
     return result
+
+
+@app.post("/v1/clinical/vascular-stiffness", tags=["Cardiology EHR Triage"])
+def evaluate_vascular_stiffness(payload: ClinicalTriageRequest):
+    """Estimates arterial pulse pressure, mean arterial pressure (MAP), and age-adjusted vascular stiffness risk."""
+    result = compute_pulse_pressure_stiffness_index(payload.model_dump())
+    result["timestamp"] = datetime.now(timezone.utc).isoformat()
+    return result
+
 
 
 

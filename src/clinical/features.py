@@ -476,6 +476,47 @@ def compute_chronotropic_reserve_profile(patient: Dict[str, Any]) -> Dict[str, A
     }
 
 
+def compute_pulse_pressure_stiffness_index(patient: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Estimates arterial pulse pressure, mean arterial pressure (MAP), and age-adjusted
+    vascular stiffness risk from resting systolic blood pressure, age, and metabolic burden.
+    """
+    age = max(18.0, float(patient.get("age", 50) or 50))
+    systolic_bp = max(80.0, float(patient.get("resting_bp", 120) or 120))
+    cholesterol = float(patient.get("cholesterol", 190) or 190)
+    fasting_bs = int(patient.get("fasting_bs", 0) or 0)
+
+    # Estimate diastolic BP using physiological pulse pressure widening with age and systolic load
+    estimated_diastolic_bp = round(max(50.0, min(110.0, systolic_bp * 0.62 - (age - 45.0) * 0.15)), 1)
+    pulse_pressure = round(max(20.0, systolic_bp - estimated_diastolic_bp), 1)
+    mean_arterial_pressure = round(estimated_diastolic_bp + (pulse_pressure / 3.0), 1)
+    stiffness_index = round(
+        (pulse_pressure / 40.0) + max(0.0, (age - 45.0) / 30.0) + (0.25 if fasting_bs == 1 else 0.0) + (0.2 if cholesterol >= 240.0 else 0.0),
+        3,
+    )
+
+    if pulse_pressure >= 60.0 or stiffness_index >= 2.0:
+        compliance_tier = "HIGH_ARTERIAL_STIFFNESS"
+        recommendation = "Evaluate isolated systolic hypertension, pulse wave velocity, and vascular compliance therapy."
+    elif pulse_pressure >= 50.0 or stiffness_index >= 1.55:
+        compliance_tier = "BORDERLINE_VASCULAR_COMPLIANCE"
+        recommendation = "Monitor ambulatory pulse pressure and optimize sodium restriction and aerobic conditioning."
+    else:
+        compliance_tier = "NORMAL_ARTERIAL_COMPLIANCE"
+        recommendation = "Arterial pulse pressure and estimated mean arterial perfusion within reference bounds."
+
+    return {
+        "resting_systolic_bp_mmhg": round(systolic_bp, 1),
+        "estimated_diastolic_bp_mmhg": estimated_diastolic_bp,
+        "estimated_pulse_pressure_mmhg": pulse_pressure,
+        "mean_arterial_pressure_mmhg": mean_arterial_pressure,
+        "vascular_stiffness_index": stiffness_index,
+        "arterial_compliance_tier": compliance_tier,
+        "clinical_recommendation": recommendation,
+    }
+
+
+
 
 
 
